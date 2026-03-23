@@ -1,0 +1,32 @@
+{
+    "project_hash": "3923eae7-b905-4552-a700-5bcf41da6ddd",
+    "components": {
+        "layout": {
+            "installationTime": 1773928094
+        },
+        "sidebar": {
+            "installationTime": 1773929119
+        },
+        "icon": {
+            "installationTime": 1773929122
+        },
+        "button": {
+            "installationTime": 1773929123
+        },
+        "navlist": {
+            "installationTime": 1773929124
+        },
+        "badge": {
+            "installationTime": 1773929125
+        },
+        "navbar": {
+            "installationTime": 1773929519
+        },
+        "brand": {
+            "installationTime": 1774251874
+        },
+        "avatar": {
+            "installationTime": 1774252702
+        }
+    }
+}
