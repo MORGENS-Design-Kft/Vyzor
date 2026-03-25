@@ -11,7 +11,7 @@
     'disabled' => false,
     'pillbox' => false,
     'icon' => null,
-    'iconAfter' => 'chevron-up-down',
+    'iconAfter' => 'caret-up-down',
     'checkIcon' => 'check',
     'checkIconClass' => null,
     'invalid' => null,

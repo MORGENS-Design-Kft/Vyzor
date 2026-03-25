@@ -8,8 +8,9 @@ use App\Models\Project;
 use App\ProjectStatusEnum;
 
 new #[Layout('layouts.app')] class extends Component {
-    #[Validate('required|string|max:255')]
+    public Project $project;
 
+    #[Validate('required|string|max:255')]
     public string $name = '';
 
     #[Validate('nullable|string')]
@@ -24,6 +25,18 @@ new #[Layout('layouts.app')] class extends Component {
     #[Validate('required|url|max:255')]
     public string $domain = '';
 
+    public function mount(Project $project): void
+    {
+        abort_unless($project->owner_id === auth()->id(), 403);
+
+        $this->project = $project;
+        $this->name = $project->name;
+        $this->description = $project->description ?? '';
+        $this->customer_id = (string) $project->customer_id;
+        $this->status = $project->status->value;
+        $this->domain = $project->domain;
+    }
+
     public function updatedDomain(): void
     {
         $trimmed = trim($this->domain);
@@ -33,21 +46,18 @@ new #[Layout('layouts.app')] class extends Component {
         }
     }
 
-    public function createProject(): void
+    public function updateProject(): void
     {
         $this->updatedDomain();
         $this->validate();
 
-        $project = Project::create([
+        $this->project->update([
             'name' => $this->name,
             'description' => $this->description ?: null,
-            'owner_id' => auth()->id(),
             'customer_id' => $this->customer_id,
             'status' => $this->status,
             'domain' => $this->domain,
         ]);
-
-        session(['current_project_id' => $project->id]);
 
         $this->redirect(route('projects'), navigate: true);
     }
@@ -64,8 +74,8 @@ new #[Layout('layouts.app')] class extends Component {
 
 <div>
     <div class="flex items-center justify-center p-6">
-        <form wire:submit="createProject">
-            <x-ui.fieldset label="Create Project" class="w-150">
+        <form wire:submit="updateProject">
+            <x-ui.fieldset label="Edit Project" class="w-150">
                 <x-ui.field required>
                     <x-ui.label>Project Name</x-ui.label>
                     <x-ui.input wire:model.blur="name" placeholder="Project name..." :invalid="$errors->has('name')" />
@@ -88,7 +98,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </x-ui.select>
 
                 </x-ui.field>
-                
+
                 <x-ui.field required>
                     <x-ui.label>Status</x-ui.label>
                     <x-ui.radio.group wire:model.blur="status" variant="segmented" direction="horizontal">
@@ -106,7 +116,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </x-ui.field>
 
                 <x-ui.field class="mt-4">
-                    <x-ui.button type="submit" variant="primary" color="blue" icon="plus">Create Project</x-ui.button>
+                    <x-ui.button type="submit" variant="primary" color="blue" icon="floppy-disk">Save Changes</x-ui.button>
                 </x-ui.field>
             </x-ui.fieldset>
         </form>

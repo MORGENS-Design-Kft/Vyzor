@@ -7,7 +7,7 @@
     'color' => null,
     'disabled'=> false,
     'loading' => false,
-    'variant' => 'primary',
+    'variant' => 'otline',
     'icon' => null,
     'iconAfter' => null,
     'iconVariant' => null,

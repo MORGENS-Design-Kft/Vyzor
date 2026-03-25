@@ -11,7 +11,7 @@
     };
     
     $classes = [
-        'bg-white dark:bg-neutral-900 border border-black/10 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700',
+        'bg-white dark:bg-neutral-900 border border-black/10 dark:border-white/10',
         '[:where(&)]:p-4 [:where(&)]:rounded-lg',
         $variantClasses
     ];

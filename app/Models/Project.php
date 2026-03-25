@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\ProjectStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,6 +16,13 @@ class Project extends Model
         'status',
         'domain',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => ProjectStatusEnum::class,
+        ];
+    }
 
     public function owner(): BelongsTo
     {

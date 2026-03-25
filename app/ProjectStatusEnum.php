@@ -2,22 +2,44 @@
 
 namespace App;
 
-enum ProjectStatusEnum
+enum ProjectStatusEnum: string
 {
-    case ACTIVE;
-    case ABORTED;
-    case POSTPONED;
-    case COMPLETED;
-    case PRESENTATION;
+    case ACTIVE = 'active';
+    case ABORTED = 'aborted';
+    case POSTPONED = 'postponed';
+    case COMPLETED = 'completed';
+    case PRESENTATION = 'presentation';
 
     public function label(): string
     {
         return match ($this) {
-            self::ACTIVE => 'Active', //The project is currently active and ongoing.
-            self::ABORTED => 'Aborted',     //The project has been terminated before completion, probably due to customer request or unforeseen circumstances.
-            self::POSTPONED => 'Postponed',     //The project is on hold
-            self::PRESENTATION => 'Presentation',     //The project is in the presentation phase, where the results are being showcased to customers.
-            self::COMPLETED => 'Completed',     //The project has been successfully completed.
+            self::ACTIVE => 'Active',
+            self::ABORTED => 'Aborted',
+            self::POSTPONED => 'Postponed',
+            self::PRESENTATION => 'Presentation',
+            self::COMPLETED => 'Completed',
+        };
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::ACTIVE => 'blue',
+            self::COMPLETED => 'green',
+            self::ABORTED => 'red',
+            self::POSTPONED => 'amber',
+            self::PRESENTATION => 'violet',
+        };
+    }
+
+    public function hex(): string
+    {
+        return match ($this) {
+            self::ACTIVE => '#3b82f6',
+            self::COMPLETED => '#22c55e',
+            self::ABORTED => '#ef4444',
+            self::POSTPONED => '#f59e0b',
+            self::PRESENTATION => '#8b5cf6',
         };
     }
 }

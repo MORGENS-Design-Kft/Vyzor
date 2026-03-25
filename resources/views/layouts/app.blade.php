@@ -26,29 +26,64 @@
                     <x-ui.brand href="/dashboard" name="Vyzor" />
                 </x-slot:brand>
 
-                <x-ui.navbar>
-                    <x-ui.navbar.item label="New Project" href="/new-project" />
-                </x-ui.navbar>
-
                 <div class="ml-auto flex items-center gap-6">
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-neutral-500 dark:text-neutral-400 whitespace-nowrap">Project:</span>
+                        <span
+                            class="text-sm font-medium text-neutral-500 dark:text-neutral-400 whitespace-nowrap">Project:</span>
                         <livewire:project-select />
+                        <x-ui.button variant="outline" color="neutral" icon="plus-circle" class="rounded-lg" size="icon"
+                            href="/add-project" />
                     </div>
 
-                    <x-ui.avatar />
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <x-ui.button type="submit">Logout</x-ui.button>
-                    </form>
+                    <x-ui.dropdown position="bottom-end">
+                        <x-slot:button>
+                            <x-ui.avatar class="cursor-pointer" />
+                        </x-slot:button>
+
+                        <x-slot:menu class="min-w-48">
+                            <div class="px-2 py-1.5 text-sm text-neutral-500 dark:text-neutral-400">
+                                Signed in as
+                                <span
+                                    class="block font-medium text-neutral-900 dark:text-neutral-100">{{ auth()->user()->name }}</span>
+                            </div>
+
+                            <x-ui.dropdown.separator />
+
+                            <div>
+                                <x-ui.dropdown.item icon="gear" disabled>
+                                    Settings
+                                </x-ui.dropdown.item>
+                            </div>
+
+                            <x-ui.dropdown.separator />
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <x-ui.dropdown.item icon="sign-out" variant="danger" type="submit" as="button">
+                                    Logout
+                                </x-ui.dropdown.item>
+                            </form>
+                        </x-slot:menu>
+                    </x-ui.dropdown>
                 </div>
             </x-ui.layout.header>
 
             <x-ui.sidebar>
                 <x-ui.navlist>
-                    <x-ui.navlist.item label="Dashboard" icon="home" href="/dashboard" />
-                    <x-ui.navlist.item label="Users" icon="users" href="/users" />
-                    <x-ui.navlist.item label="Settings" icon="cog" href="/settings" />
+                    <x-ui.navlist.group label="General">
+                        <x-ui.navlist.item disabled label="Dashboard" icon="house" href="/" />
+                        <x-ui.navlist.item label="Projects" icon="check-square" href="/projects" />
+                    </x-ui.navlist.group>
+                    <x-ui.navlist.group label="Project">
+                        <x-ui.navlist.item disabled label="Overview" icon="chart-bar" href="/dashboard" />
+                        <x-ui.navlist.item disabled label="Reports" icon="projector-screen-chart" />
+                        <x-ui.navlist.item disabled label="Clarity" icon="squares-four" />
+                        <x-ui.navlist.item disabled label="ContentSquare" icon="cube" />
+                    </x-ui.navlist.group>
+                    <x-ui.navlist.group label="System">
+                        <x-ui.navlist.item label="Users | Customers" icon="users" href="/users" />
+                        <x-ui.navlist.item disabled label="Settings" icon="gear" href="/settings" />
+                    </x-ui.navlist.group>
                 </x-ui.navlist>
             </x-ui.sidebar>
 

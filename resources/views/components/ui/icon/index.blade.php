@@ -6,13 +6,13 @@
 
 @php
     // Detect icon set
-    $isPhosphorSet = str($name)->startsWith(['ps:', 'phosphor:']);
-    $isHeroiconsSet = ! $isPhosphorSet;
+    $isHeroiconsSet = str($name)->startsWith(['hi:', 'heroicon:']);
+    $isPhosphorSet = ! $isHeroiconsSet;
 
     // Normalize icon name safely
-    $iconName = $isPhosphorSet
+    $iconName = $isHeroiconsSet
         ? str($name)->after(':')
-        : $name;
+        : (str($name)->startsWith(['ps:', 'phosphor:']) ? str($name)->after(':') : $name);
 
 
     // Resolve component name

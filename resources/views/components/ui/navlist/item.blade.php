@@ -6,7 +6,8 @@
     'badge' => null,
     'label' => null,
     'href' => '#',
-    'active' => null
+    'active' => null,
+    'disabled' => false
 ])
 
 @php
@@ -35,6 +36,8 @@
         '[&_[data-slot=icon]]:dark:text-neutral-400
          [&_[data-slot=icon]]:text-neutral-600 
          data-[active-link]:text-[var(--color-primary)]',
+        // disabled state
+        'opacity-50 pointer-events-none' => $disabled,
         // gaps and padding
         'gap-x-2 pl-3 pr-1 py-1 rounded-box',
         // When collapsed: remove horizontal padding, keep vertical padding for centering
@@ -58,10 +61,13 @@
 
 @endphp
 <a
-    href="{{ $href }}"
+    @if(!$disabled) href="{{ $href }}" @endif
     
     @if($active)
        data-active-link
+    @endif
+    @if($disabled)
+       aria-disabled="true"
     @endif
     
     data-slot="navlist-item"

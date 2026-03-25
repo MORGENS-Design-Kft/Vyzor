@@ -1,6 +1,6 @@
 @aware([
     'icon' => '',
-    'iconAfter' => 'chevron-up-down',
+    'iconAfter' => 'caret-up-down',
     'disabled' => false,
     'clearable' => false,
     'searchable' => false,

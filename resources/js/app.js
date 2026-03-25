@@ -12,4 +12,8 @@ Alpine.plugin(rover);
 
 await import("./components/select");
 
+// ...
+import './globals/modals.js';
+// ...
+
 Livewire.start();

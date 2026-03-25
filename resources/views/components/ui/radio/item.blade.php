@@ -13,6 +13,7 @@
     'icon' => '',
     'iconVariant' => 'outline',
     'iconClass' => '',
+    'color' => '',
 ])
 
 @php
@@ -22,6 +23,7 @@
     $isPills = $variant === 'pills';
     $showIcon = ($isSegmented || $isCards) && filled($icon);
     $showInput = !$isSegmented && (!$isCards || $indicator) && !$isPills;
+    $hasColor = $isSegmented && filled($color);
 
     $labelClasses = [
         'flex-1 cursor-pointer text-sm font-medium flex items-center gap-2 transition duration-200',
@@ -32,7 +34,9 @@
         'peer-disabled:opacity-50 cursor-auto',
         'peer-disabled:[&>[data-slot=radio-item-indicator]]:opacity-50 peer-disabled:[&>[data-slot=radio-item-indicator]]:shadow-none',
 
-        'text-neutral-300 hover:text-neutral-950 p-2 rounded-field peer-checked:shadow-xs dark:text-white/70 peer-checked:bg-white/80 dark:peer-checked:bg-neutral-700 hover:bg-white dark:hover:bg-neutral-700' => $isSegmented,
+        'text-neutral-300 hover:text-neutral-950 p-2 rounded-field peer-checked:shadow-xs dark:text-white/70' => $isSegmented,
+        'hover:bg-white dark:hover:bg-neutral-700' => $isSegmented && !$hasColor,
+        'peer-checked:bg-white/80 dark:peer-checked:bg-neutral-700' => $isSegmented && !$hasColor,
         'peer-checked:bg-primary-content peer-checked:text-primary-fg px-2 py-0.5 rounded-full peer-checked:hover:text-primary-fg' => $isPills,
         '[&>[data-slot=radio-item-indicator]]:order-3 [&>[data-slot=radio-item-indicator]]:ml-auto' => $isCards
     ];
@@ -70,7 +74,15 @@
         x-model="$data._state"
     />
 
-    <label for="{{ $value }}-{{ $name }}" @class($labelClasses)>
+    <label
+        for="{{ $value }}-{{ $name }}"
+        @class($labelClasses)
+        @if ($hasColor)
+            :style="$data._state === @js($value)
+                ? 'background-color: {{ $color }}18; color: {{ $color }}; box-shadow: inset 0 0 0 1.5px {{ $color }}50'
+                : 'color: {{ $color }}80'"
+        @endif
+    >
         @if ($indicator && !$isPills)
             <x-ui.radio.indicator />
         @endif

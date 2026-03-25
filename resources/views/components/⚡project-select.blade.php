@@ -2,9 +2,17 @@
 
 use Livewire\Component;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use App\Models\Project;
 
 new class extends Component {
+
+    public $selectedProject = '';
+
+    public function mount()
+    {
+        $this->selectedProject = (string) session('current_project_id', '');
+    }
 
     #[Computed]
     public function projects()
@@ -12,19 +20,29 @@ new class extends Component {
         return Project::with('customer')->get()->groupBy(fn($project) => $project->customer?->name ?? 'No Customer');
     }
 
-    public function setCurrentProject($projectId)
+    public function updatedSelectedProject($value)
     {
-        // Logic to set the current project, e.g., store in session or emit an event
-        session(['current_project_id' => $projectId]);
-        $this->emit('projectChanged', $projectId);
+        if (blank($value)) {
+            // Restore previous selection — prevent deselection
+            $this->selectedProject = (string) session('current_project_id', '');
+            return;
+        }
+
+        session(['current_project_id' => (int) $value]);
+        $this->dispatch('current-project-changed', projectId: (int) $value);
+    }
+
+    #[On('current-project-changed')]
+    public function refreshSelectedProject($projectId)
+    {
+        $this->selectedProject = (string) $projectId;
     }
 
 };
 ?>
 
 <div class="w-72">
-    <x-ui.select placeholder="Select a project..." {{ $attributes }}
-        wire:change="setCurrentProject($event.target.value)">
+    <x-ui.select placeholder="Select a project..." wire:model.live="selectedProject">
         @foreach ($this->projects as $customerName => $customerProjects)
             <x-ui.select.group :label="$customerName">
                 @foreach ($customerProjects as $project)
@@ -38,5 +56,4 @@ new class extends Component {
             </x-ui.select.group>
         @endforeach
     </x-ui.select>
-    {{-- People find pleasure in different ways. I find it in keeping my mind clear. - Marcus Aurelius --}}
 </div>

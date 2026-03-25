@@ -1,0 +1,162 @@
+<?php
+
+use Livewire\Component;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
+use App\Models\Project;
+use App\ProjectStatusEnum;
+
+new #[Layout('layouts.app')] class extends Component {
+
+    public function setActiveProject(int $projectId): void
+    {
+        Project::where('owner_id', auth()->id())->findOrFail($projectId);
+        session(['current_project_id' => $projectId]);
+        $this->dispatch('current-project-changed', projectId: $projectId);
+    }
+
+    #[On('current-project-changed')]
+    public function onProjectChanged()
+    {
+        // Re-renders the component to reflect the new active state
+    }
+
+    public function updateStatus(int $projectId, string $status): void
+    {
+        $project = Project::where('owner_id', auth()->id())->findOrFail($projectId);
+        $project->update(['status' => ProjectStatusEnum::from($status)]);
+    }
+
+    public function deleteProject(int $projectId): void
+    {
+        $project = Project::where('owner_id', auth()->id())->findOrFail($projectId);
+        $project->delete();
+
+        if (session('current_project_id') == $projectId) {
+            session()->forget('current_project_id');
+            $this->dispatch('current-project-changed', projectId: null);
+        }
+    }
+
+    public function with(): array
+    {
+        return [
+            'projects' => Project::with('customer')
+                ->where('owner_id', auth()->id())
+                ->latest('updated_at')
+                ->get(),
+            'statuses' => ProjectStatusEnum::cases(),
+        ];
+    }
+
+};
+?>
+
+<div class="p-6 space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Projects</h1>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">All projects assigned to you.</p>
+        </div>
+        <x-ui.button variant="primary" icon="plus" as="a" href="/new-project">New Project</x-ui.button>
+    </div>
+
+    <x-ui.card class="overflow-hidden p-0! max-w-full!">
+        @if ($projects->isEmpty())
+            <div class="text-center py-12">
+                <x-ui.icon name="folder-open" class="size-10 mx-auto text-neutral-300 dark:text-neutral-600" />
+                <p class="mt-2 text-neutral-500 dark:text-neutral-400">No projects found.</p>
+                <x-ui.button variant="outline" color="neutral" as="a" href="/new-project" class="mt-4">Create your first project</x-ui.button>
+            </div>
+        @else
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">
+                    <tr>
+                        <th class="px-4 py-3 font-medium">Name</th>
+                        <th class="px-4 py-3 font-medium">Domain</th>
+                        <th class="px-4 py-3 font-medium">Customer</th>
+                        <th class="px-4 py-3 font-medium">Status</th>
+                        <th class="px-4 py-3 font-medium">Created</th>
+                        <th class="px-4 py-3 font-medium w-36">Updated</th>
+                        <th class="px-4 py-3 font-medium w-0">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+                    @foreach ($projects as $project)
+                        @php $isActive = session('current_project_id') == $project->id; @endphp
+                        <tr class="h-16 {{ $isActive ? 'bg-neutral-50 dark:bg-neutral-900/30 border-l-2 border-l-green-500' : '' }}">
+                            <td class="px-4 py-3 align-middle">
+                                <div>
+                                    <span class="font-medium text-neutral-900 dark:text-neutral-100">{{ $project->name }}</span>
+                                    @if ($project->description)
+                                        <p class="text-xs text-neutral-400 dark:text-neutral-500 truncate max-w-xs mt-0.5">{{ $project->description }}</p>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+                                <x-ui.link href="{{ $project->domain ?? '—' }}">{{ $project->domain ?? '—' }}</x-ui.link>
+                            </td>
+                            <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+                                {{ $project->customer?->name ?? '—' }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <x-ui.dropdown position="bottom-start">
+                                    <x-slot:button>
+                                        <x-ui.badge size="sm" class="cursor-pointer" :color="$project->status->color()">
+                                            {{ $project->status->label() }}
+                                            <x-ui.icon name="caret-down" class="size-3" />
+                                        </x-ui.badge>
+                                    </x-slot:button>
+                                    <x-slot:menu>
+                                        @foreach ($statuses as $status)
+                                            <x-ui.dropdown.item
+                                                wire:click="updateStatus({{ $project->id }}, '{{ $status->value }}')"
+                                                :active="$project->status === $status"
+                                            >
+                                                <span class="flex items-center gap-2">
+                                                    <span class="size-2 rounded-full bg-{{ $status->color() }}-500"></span>
+                                                    {{ $status->label() }}
+                                                </span>
+                                            </x-ui.dropdown.item>
+                                        @endforeach
+                                    </x-slot:menu>
+                                </x-ui.dropdown>
+                            </td>
+                            <td class="px-4 py-3 text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+                                {{ $project->created_at->format('M d, Y') }}
+                            </td>
+                            <td class="px-4 py-3 text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+                                {{ $project->updated_at->diffForHumans() }}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="flex items-center gap-1">
+                                    <x-ui.button
+                                        size="xs"
+                                        variant="soft"
+                                        icon="arrow-square-in"
+                                        wire:click="setActiveProject({{ $project->id }})"
+                                        :disabled="$isActive"
+                                    >
+                                        Set Active
+                                    </x-ui.button>
+                                    <x-ui.button size="xs" variant="soft" icon="pencil-simple" as="a" href="{{ route('project.edit', $project) }}" wire:navigate>Edit</x-ui.button>
+                                    <x-ui.modal.trigger :id="'delete-project-' . $project->id">
+                                        <x-ui.button size="xs" variant="soft" icon="trash">
+                                            Delete
+                                        </x-ui.button>
+                                    </x-ui.modal.trigger>
+                                    <x-ui.modal :id="'delete-project-' . $project->id" title="Delete Project" size="sm" centered>
+                                        <x-slot:footer>
+                                            <x-ui.button variant="ghost" x-on:click="isOpen = false">Cancel</x-ui.button>
+                                            <x-ui.button variant="danger" wire:click="deleteProject({{ $project->id }})" x-on:click="isOpen = false">Delete</x-ui.button>
+                                        </x-slot:footer>
+                                    </x-ui.modal>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+    </x-ui.card>
+</div>
