@@ -22,5 +22,6 @@
 
 ## UI Components
 - Use **Sheaf UI** (`resources/views/components/ui/`) for all UI elements.
+- If an HTML element is needed, search for existing Sheaf UI elements in the proejct. If not present, install it.
 - Never introduce external UI libraries or write raw HTML when a Sheaf UI component exists.
 - Components are prefixed with `x-ui.` (e.g., `<x-ui.button>`, `<x-ui.input>`, `<x-ui.fieldset>`).

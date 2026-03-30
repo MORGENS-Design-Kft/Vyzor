@@ -4,7 +4,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+
+    return Auth::user()->isCustomer()
+        ? redirect()->route('customer.dashboard')
+        : redirect()->route('dashboard');
 });
 
 Route::middleware('guest')->group(function () {
@@ -13,12 +19,17 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::livewire('/dashboard', 'pages::dashboard')->name('dashboard');
+    Route::middleware('user_type:user')->group(function () {
+        Route::livewire('/dashboard', 'pages::dashboard')->name('dashboard');
+        Route::livewire('/new-project', 'pages::project.create')->name('new-project');
+        Route::livewire('/projects/{project}/edit', 'pages::project.edit')->name('project.edit');
+        Route::livewire('/projects', 'pages::project.list')->name('projects');
+        Route::livewire('/users', 'pages::users')->name('users');
+    });
 
-    Route::livewire('/new-project', 'pages::project.create')->name('new-project');
-    Route::livewire('/projects/{project}/edit', 'pages::project.edit')->name('project.edit');
-    Route::livewire('/projects', 'pages::project.list')->name('projects');
-    Route::livewire('/users', 'pages::users')->name('users');
+    Route::middleware('user_type:customer')->group(function () {
+        Route::livewire('/customer/dashboard', 'pages::customer.dashboard')->name('customer.dashboard');
+    });
 
     Route::post('/logout', function () {
         Auth::guard('web')->logout();

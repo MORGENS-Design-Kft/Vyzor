@@ -17,7 +17,7 @@ new class extends Component {
     #[Computed]
     public function projects()
     {
-        return Project::with('customer')->get()->groupBy(fn($project) => $project->customer?->name ?? 'No Customer');
+        return Project::with('customer')->where('owner_id', auth()->id())->get()->groupBy(fn($project) => $project->customer?->name ?? 'No Customer');
     }
 
     public function updatedSelectedProject($value)

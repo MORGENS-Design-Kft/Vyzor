@@ -103,7 +103,8 @@ new #[Layout('layouts.app')] class extends Component {
                     <x-ui.label>Status</x-ui.label>
                     <x-ui.radio.group wire:model.blur="status" variant="segmented" direction="horizontal">
                         @foreach ($statuses as $statusOption)
-                            <x-ui.radio.item :value="strtolower($statusOption->name)" :label="$statusOption->label()" :color="$statusOption->hex()" />
+                            <x-ui.radio.item :value="strtolower($statusOption->name)" :label="$statusOption->label()"
+                                :color="$statusOption->hex()" />
                         @endforeach
                     </x-ui.radio.group>
                     @error('status') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
@@ -115,8 +116,11 @@ new #[Layout('layouts.app')] class extends Component {
                     @error('domain') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
                 </x-ui.field>
 
+                <x-ui.separator class="my-4" hidden horizontal />
+
                 <x-ui.field class="mt-4">
-                    <x-ui.button type="submit" variant="primary" color="blue" icon="floppy-disk">Save Changes</x-ui.button>
+                    <x-ui.button type="submit" variant="primary" color="blue" icon="floppy-disk">Save
+                        Changes</x-ui.button>
                 </x-ui.field>
             </x-ui.fieldset>
         </form>

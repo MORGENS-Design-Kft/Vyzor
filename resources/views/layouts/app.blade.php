@@ -32,8 +32,10 @@
                             class="text-sm font-medium text-neutral-500 dark:text-neutral-400 whitespace-nowrap">Project:</span>
                         <livewire:project-select />
                         <x-ui.button variant="outline" color="neutral" icon="plus-circle" class="rounded-lg" size="icon"
-                            href="/add-project" />
+                            href="/new-project" />
                     </div>
+
+                    <x-ui.separator class="my-1" vertical />
 
                     <x-ui.dropdown position="bottom-end">
                         <x-slot:button>

@@ -25,7 +25,11 @@ new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Componen
 
         session()->regenerate();
 
-        $this->redirectIntended(default: route('dashboard'), navigate: true);
+        $default = auth()->user()->isCustomer()
+            ? route('customer.dashboard')
+            : route('dashboard');
+
+        $this->redirectIntended(default: $default, navigate: true);
     }
 };
 ?>

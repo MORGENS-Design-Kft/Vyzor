@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserType;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/login');
-        $middleware->redirectUsersTo('/dashboard');
+        $middleware->redirectUsersTo(fn ($request) => $request->user()?->isCustomer()
+            ? '/customer/dashboard'
+            : '/dashboard'
+        );
+        $middleware->alias([
+            'user_type' => EnsureUserType::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
