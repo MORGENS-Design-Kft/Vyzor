@@ -4,14 +4,13 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Component {
-    public string $type = 'user';
+new #[Layout('layouts.app')] class extends Component {
+    public string $type = 'web';
 
     // User fields
-    #[Validate('required_if:type,user|string|max:255')]
+    #[Validate('required_if:type,web|string|max:255')]
     public string $name = '';
 
     // Shared fields
@@ -35,10 +34,10 @@ new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Componen
     {
         $this->validate();
 
-        $user = DB::transaction(function () {
+        DB::transaction(function () {
             $user = User::create([
                 'type' => $this->type,
-                'name' => $this->type === 'user' ? $this->name : $this->company_name,
+                'name' => $this->type === 'web' ? $this->name : $this->company_name,
                 'email' => $this->email,
                 'password' => $this->password,
             ]);
@@ -52,14 +51,9 @@ new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Componen
                 $user->userProfile()->create();
             }
 
-            return $user;
         });
 
-        Auth::login($user);
-
-        session()->regenerate();
-
-        $this->redirect(route('dashboard'), navigate: true);
+        $this->redirect(route('users'), navigate: true);
     }
 };
 ?>
@@ -70,12 +64,12 @@ new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Componen
             <x-ui.fieldset label="Register" class="w-100">
                 <x-ui.field>
                     <x-ui.radio.group wire:model.live="type" direction="horizontal">
-                        <x-ui.radio.item value="user" label="User" />
+                        <x-ui.radio.item value="web" label="User" />
                         <x-ui.radio.item value="customer" label="Customer" />
                     </x-ui.radio.group>
                 </x-ui.field>
 
-                @if ($type === 'user')
+                @if ($type === 'web')
                     <x-ui.field required>
                         <x-ui.label>Name</x-ui.label>
                         <x-ui.input placeholder="Name..." wire:model="name" />

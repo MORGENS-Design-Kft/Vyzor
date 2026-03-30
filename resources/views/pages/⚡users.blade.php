@@ -21,6 +21,11 @@ new #[Layout('layouts.app')] class extends Component {
     #[Validate('nullable|string|max:255')]
     public string $editPhone = '';
 
+    #[Validate('nullable|string|min:8|confirmed')]
+    public string $editPassword = '';
+
+    public string $editPassword_confirmation = '';
+
     public function startEditing(int $userId): void
     {
         $user = User::findOrFail($userId);
@@ -37,6 +42,8 @@ new #[Layout('layouts.app')] class extends Component {
     public function cancelEditing(): void
     {
         $this->editingId = null;
+        $this->editPassword = '';
+        $this->editPassword_confirmation = '';
         $this->resetValidation();
     }
 
@@ -45,10 +52,17 @@ new #[Layout('layouts.app')] class extends Component {
         $this->validate();
 
         $user = User::findOrFail($this->editingId);
-        $user->update([
+
+        $data = [
             'name' => $this->editName,
             'email' => $this->editEmail,
-        ]);
+        ];
+
+        if (filled($this->editPassword)) {
+            $data['password'] = $this->editPassword;
+        }
+
+        $user->update($data);
 
         if ($user->isCustomer() && $user->customerProfile) {
             $user->customerProfile->update([
@@ -58,21 +72,27 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         $this->editingId = null;
+        $this->editPassword = '';
+        $this->editPassword_confirmation = '';
         $this->resetValidation();
     }
 
     public function with(): array
     {
         return [
-            'users' => User::where('type', 'user')->get(),
+            'users' => User::where('type', 'web')->get(),
             'customers' => User::where('type', 'customer')->with('customerProfile')->get(),
         ];
     }
 };
 ?>
 
-<div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+<div class="p-6">
+    <x-ui.link href="{{ route('register') }}" variant="outline">Add new user / customer</x-ui.link>
+
+    <x-ui.separator class="my-4"/>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {{-- Users Column --}}
         <x-ui.card size="2xl">
             <div class="flex items-center gap-2 mb-4">
@@ -82,22 +102,38 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
 
             @forelse ($users as $user)
-                <div class="flex items-center justify-between py-3 {{ !$loop->last ? 'border-b border-neutral-200 dark:border-neutral-800' : '' }}">
+                <div
+                    class="flex items-center justify-between py-3 {{ !$loop->last ? 'border-b border-neutral-200 dark:border-neutral-800' : '' }}">
                     @if ($editingId === $user->id)
                         <form wire:submit="saveEdit" class="flex-1 space-y-3">
                             <x-ui.field>
                                 <x-ui.label>Name</x-ui.label>
                                 <x-ui.input wire:model="editName" placeholder="Name..." :invalid="$errors->has('editName')" />
-                                @error('editName') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                                @error('editName') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                                @enderror
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>Email</x-ui.label>
-                                <x-ui.input wire:model="editEmail" type="email" placeholder="Email..." :invalid="$errors->has('editEmail')" />
-                                @error('editEmail') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                                <x-ui.input wire:model="editEmail" type="email" placeholder="Email..."
+                                    :invalid="$errors->has('editEmail')" />
+                                @error('editEmail') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                                @enderror
+                            </x-ui.field>
+                            <x-ui.field>
+                                <x-ui.label>New Password</x-ui.label>
+                                <x-ui.input wire:model="editPassword" type="password" placeholder="Leave blank to keep current..."
+                                    :invalid="$errors->has('editPassword')" />
+                                @error('editPassword') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                                @enderror
+                            </x-ui.field>
+                            <x-ui.field>
+                                <x-ui.label>Confirm Password</x-ui.label>
+                                <x-ui.input wire:model="editPassword_confirmation" type="password" placeholder="Confirm password..." />
                             </x-ui.field>
                             <div class="flex gap-2">
                                 <x-ui.button type="submit" size="xs" variant="primary">Save</x-ui.button>
-                                <x-ui.button type="button" size="xs" variant="ghost" wire:click="cancelEditing">Cancel</x-ui.button>
+                                <x-ui.button type="button" size="xs" variant="ghost"
+                                    wire:click="cancelEditing">Cancel</x-ui.button>
                             </div>
                         </form>
                     @else
@@ -108,7 +144,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ $user->email }}</p>
                             </div>
                         </div>
-                        <x-ui.button size="xs" variant="ghost" icon="pencil" wire:click="startEditing({{ $user->id }})">Edit</x-ui.button>
+                        <x-ui.button size="xs" variant="ghost" icon="pencil"
+                            wire:click="startEditing({{ $user->id }})">Edit</x-ui.button>
                     @endif
                 </div>
             @empty
@@ -125,41 +162,62 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
 
             @forelse ($customers as $customer)
-                <div class="flex items-center justify-between py-3 {{ !$loop->last ? 'border-b border-neutral-200 dark:border-neutral-800' : '' }}">
+                <div
+                    class="flex items-center justify-between py-3 {{ !$loop->last ? 'border-b border-neutral-200 dark:border-neutral-800' : '' }}">
                     @if ($editingId === $customer->id)
                         <form wire:submit="saveEdit" class="flex-1 space-y-3">
                             <x-ui.field>
                                 <x-ui.label>Company Name</x-ui.label>
-                                <x-ui.input wire:model="editCompanyName" placeholder="Company name..." :invalid="$errors->has('editCompanyName')" />
-                                @error('editCompanyName') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                                <x-ui.input wire:model="editCompanyName" placeholder="Company name..."
+                                    :invalid="$errors->has('editCompanyName')" />
+                                @error('editCompanyName') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}
+                                </p> @enderror
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>Email</x-ui.label>
-                                <x-ui.input wire:model="editEmail" type="email" placeholder="Email..." :invalid="$errors->has('editEmail')" />
-                                @error('editEmail') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                                <x-ui.input wire:model="editEmail" type="email" placeholder="Email..."
+                                    :invalid="$errors->has('editEmail')" />
+                                @error('editEmail') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                                @enderror
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>Phone</x-ui.label>
                                 <x-ui.input wire:model="editPhone" type="tel" placeholder="Phone..." />
-                                @error('editPhone') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                                @error('editPhone') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                                @enderror
+                            </x-ui.field>
+                            <x-ui.field>
+                                <x-ui.label>New Password</x-ui.label>
+                                <x-ui.input wire:model="editPassword" type="password" placeholder="Leave blank to keep current..."
+                                    :invalid="$errors->has('editPassword')" />
+                                @error('editPassword') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                                @enderror
+                            </x-ui.field>
+                            <x-ui.field>
+                                <x-ui.label>Confirm Password</x-ui.label>
+                                <x-ui.input wire:model="editPassword_confirmation" type="password" placeholder="Confirm password..." />
                             </x-ui.field>
                             <div class="flex gap-2">
                                 <x-ui.button type="submit" size="xs" variant="primary">Save</x-ui.button>
-                                <x-ui.button type="button" size="xs" variant="ghost" wire:click="cancelEditing">Cancel</x-ui.button>
+                                <x-ui.button type="button" size="xs" variant="ghost"
+                                    wire:click="cancelEditing">Cancel</x-ui.button>
                             </div>
                         </form>
                     @else
                         <div class="flex items-center gap-3">
                             <x-ui.avatar :name="$customer->name" size="sm" color="emerald" />
                             <div>
-                                <p class="font-medium text-neutral-900 dark:text-neutral-100">{{ $customer->customerProfile?->company_name ?? $customer->name }}</p>
+                                <p class="font-medium text-neutral-900 dark:text-neutral-100">
+                                    {{ $customer->customerProfile?->company_name ?? $customer->name }}</p>
                                 <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ $customer->email }}</p>
                                 @if ($customer->customerProfile?->phone)
-                                    <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ $customer->customerProfile->phone }}</p>
+                                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                                        {{ $customer->customerProfile->phone }}</p>
                                 @endif
                             </div>
                         </div>
-                        <x-ui.button size="xs" variant="ghost" icon="pencil" wire:click="startEditing({{ $customer->id }})">Edit</x-ui.button>
+                        <x-ui.button size="xs" variant="ghost" icon="pencil"
+                            wire:click="startEditing({{ $customer->id }})">Edit</x-ui.button>
                     @endif
                 </div>
             @empty

@@ -9,9 +9,29 @@ new class extends Component {
 
     public $selectedProject = '';
 
+    private function storageKey(): string
+    {
+        return 'current_project_' . auth()->id();
+    }
+
     public function mount()
     {
-        $this->selectedProject = (string) session('current_project_id', '');
+        // Initialized from browser localStorage via Alpine x-init
+        $this->selectedProject = '';
+    }
+
+    public function initFromStorage(?int $projectId): void
+    {
+        if (!$projectId) return;
+
+        $owns = Project::where('owner_id', auth()->id())->where('id', $projectId)->exists();
+
+        if ($owns) {
+            $this->selectedProject = (string) $projectId;
+            session(['current_project_id' => $projectId]);
+        } else {
+            $this->js("localStorage.removeItem('" . $this->storageKey() . "')");
+        }
     }
 
     #[Computed]
@@ -23,25 +43,41 @@ new class extends Component {
     public function updatedSelectedProject($value)
     {
         if (blank($value)) {
-            // Restore previous selection — prevent deselection
             $this->selectedProject = (string) session('current_project_id', '');
             return;
         }
 
-        session(['current_project_id' => (int) $value]);
-        $this->dispatch('current-project-changed', projectId: (int) $value);
+        $id = (int) $value;
+        session(['current_project_id' => $id]);
+        $this->js("localStorage.setItem('" . $this->storageKey() . "', '" . $id . "')");
+        $this->dispatch('current-project-changed', projectId: $id);
     }
 
     #[On('current-project-changed')]
     public function refreshSelectedProject($projectId)
     {
         $this->selectedProject = (string) $projectId;
+
+        if ($projectId) {
+            session(['current_project_id' => (int) $projectId]);
+            $this->js("localStorage.setItem('" . $this->storageKey() . "', '" . (int) $projectId . "')");
+        } else {
+            session()->forget('current_project_id');
+            $this->js("localStorage.removeItem('" . $this->storageKey() . "')");
+        }
     }
 
 };
 ?>
 
-<div class="w-72">
+<div
+    class="w-72"
+    x-data
+    x-init="
+        let stored = localStorage.getItem('current_project_{{ auth()->id() }}');
+        if (stored) $wire.initFromStorage(parseInt(stored));
+    "
+>
     <x-ui.select placeholder="Select a project..." wire:model.live="selectedProject">
         @foreach ($this->projects as $customerName => $customerProjects)
             <x-ui.select.group :label="$customerName">

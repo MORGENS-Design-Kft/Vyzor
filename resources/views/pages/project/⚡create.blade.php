@@ -48,6 +48,7 @@ new #[Layout('layouts.app')] class extends Component {
         ]);
 
         session(['current_project_id' => $project->id]);
+        $this->dispatch('current-project-changed', projectId: $project->id);
 
         $this->redirect(route('projects'), navigate: true);
     }

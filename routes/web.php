@@ -15,16 +15,16 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::livewire('/login', 'pages::auth.login')->name('login');
-    Route::livewire('/register', 'pages::auth.register')->name('register');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::middleware('user_type:user')->group(function () {
+    Route::middleware('user_type:web')->group(function () {
         Route::livewire('/dashboard', 'pages::dashboard')->name('dashboard');
         Route::livewire('/new-project', 'pages::project.create')->name('new-project');
         Route::livewire('/projects/{project}/edit', 'pages::project.edit')->name('project.edit');
         Route::livewire('/projects', 'pages::project.list')->name('projects');
         Route::livewire('/users', 'pages::users')->name('users');
+        Route::livewire('/register', 'pages::auth.register')->name('register');
     });
 
     Route::middleware('user_type:customer')->group(function () {

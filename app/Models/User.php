@@ -39,7 +39,7 @@ class User extends Authenticatable
 
     public function isUser(): bool
     {
-        return $this->type === 'user';
+        return $this->type === 'web';
     }
 
     public function profile(): HasOne
