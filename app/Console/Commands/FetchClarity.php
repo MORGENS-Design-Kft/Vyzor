@@ -3,18 +3,20 @@
 namespace App\Console\Commands;
 
 use App\Models\ClarityInsight;
+use App\Models\Project;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class ClarityExtracor extends Command
+class FetchClarity extends Command
 {
-    protected $signature = 'app:clarity-extractor
+    protected $signature = 'app:fetch-clarity
+        {project : The project ID to pull Clarity data for}
         {--days=1 : Number of days to pull (1, 2, or 3)}
         {--dimension1= : First dimension (Browser, Device, Country/Region, OS, Source, Medium, Campaign, Channel, URL)}
         {--dimension2= : Second dimension}
         {--dimension3= : Third dimension}';
 
-    protected $description = 'Pulls clarity data and saves it to the database';
+    protected $description = 'Pulls clarity data for a project and saves it to the database';
 
     private const VALID_DIMENSIONS = [
         'Browser',
@@ -30,6 +32,18 @@ class ClarityExtracor extends Command
 
     public function handle(): int
     {
+        $project = Project::find($this->argument('project'));
+
+        if (!$project) {
+            $this->error('Project not found.');
+            return self::FAILURE;
+        }
+
+        if (!$project->clarity_api_key) {
+            $this->error("Project \"{$project->name}\" has no Clarity API key configured.");
+            return self::FAILURE;
+        }
+
         $days = (int) $this->option('days');
         $dimension1 = $this->option('dimension1');
         $dimension2 = $this->option('dimension2');
@@ -49,30 +63,22 @@ class ClarityExtracor extends Command
             }
         }
 
-        $this->info('Fetching Clarity data...');
+        $this->info("Fetching Clarity data for \"{$project->name}\"...");
 
-        $data = $this->fetchClarityData($days, $dimension1, $dimension2, $dimension3);
+        $data = $this->fetchClarityData($project->clarity_api_key, $days, $dimension1, $dimension2, $dimension3);
 
         if ($data === null) {
-            $this->error('Failed to fetch data from Clarity API.');
             return self::FAILURE;
         }
 
-        $this->saveToDatabase($data, $days, $dimension1, $dimension2, $dimension3);
+        $this->saveToDatabase($project, $data, $days, $dimension1, $dimension2, $dimension3);
 
         $this->info('Clarity data extraction completed successfully.');
         return self::SUCCESS;
     }
 
-    private function fetchClarityData(int $days, ?string $dimension1, ?string $dimension2, ?string $dimension3): ?array
+    private function fetchClarityData(string $token, int $days, ?string $dimension1, ?string $dimension2, ?string $dimension3): ?array
     {
-        $token = config('services.clarity.token');
-
-        if (!$token) {
-            $this->error('CLARITY_KEY is not set in your .env file.');
-            return null;
-        }
-
         $params = ['numOfDays' => $days];
 
         if ($dimension1) {
@@ -87,7 +93,7 @@ class ClarityExtracor extends Command
 
         $response = Http::withToken($token)
             ->acceptJson()
-            ->get('https://www.clarity.ms/export-data/api/v1/project-live-insights', $params);
+            ->get(config('services.clarity.endpoint'), $params);
 
         if ($response->failed()) {
             $this->error("API returned {$response->status()}: {$response->body()}");
@@ -97,7 +103,7 @@ class ClarityExtracor extends Command
         return $response->json();
     }
 
-    private function saveToDatabase(array $data, int $days, ?string $dimension1, ?string $dimension2, ?string $dimension3): void
+    private function saveToDatabase(Project $project, array $data, int $days, ?string $dimension1, ?string $dimension2, ?string $dimension3): void
     {
         $today = now()->toDateString();
 
@@ -106,6 +112,7 @@ class ClarityExtracor extends Command
 
             ClarityInsight::updateOrCreate(
                 [
+                    'project_id' => $project->id,
                     'metric_name' => $metricName,
                     'dimension1' => $dimension1,
                     'dimension2' => $dimension2,

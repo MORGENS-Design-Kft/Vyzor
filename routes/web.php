@@ -23,6 +23,7 @@ Route::middleware('auth')->group(function () {
         Route::livewire('/new-project', 'pages::project.create')->name('new-project');
         Route::livewire('/projects/{project}/edit', 'pages::project.edit')->name('project.edit');
         Route::livewire('/projects', 'pages::project.list')->name('projects');
+        Route::livewire('/clarity', 'pages::clarity')->name('clarity');
         Route::livewire('/users', 'pages::users')->name('users');
         Route::livewire('/register', 'pages::auth.register')->name('register');
     });

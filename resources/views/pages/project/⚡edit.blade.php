@@ -26,6 +26,9 @@ new #[Layout('layouts.app')] class extends Component {
     #[Validate('required|url|max:255')]
     public string $domain = '';
 
+    #[Validate('nullable|string')]
+    public string $clarity_api_key = '';
+
     public function mount(Project $project): void
     {
         abort_unless(auth()->user()->isAdmin() || $project->owner_id === auth()->id(), 403);
@@ -36,6 +39,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->customer_id = (string) $project->customer_id;
         $this->status = $project->status->value;
         $this->domain = $project->domain;
+        $this->clarity_api_key = $project->clarity_api_key ?? '';
     }
 
     public function updatedDomain(): void
@@ -58,6 +62,7 @@ new #[Layout('layouts.app')] class extends Component {
             'customer_id' => $this->customer_id,
             'status' => $this->status,
             'domain' => $this->domain,
+            'clarity_api_key' => $this->clarity_api_key ?: null,
         ]);
 
         $this->redirect(route('projects'), navigate: true);
@@ -115,6 +120,12 @@ new #[Layout('layouts.app')] class extends Component {
                     <x-ui.label>Domain</x-ui.label>
                     <x-ui.input wire:model.blur="domain" placeholder="example.com" :invalid="$errors->has('domain')" />
                     @error('domain') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                </x-ui.field>
+
+                <x-ui.field>
+                    <x-ui.label>Clarity API Key</x-ui.label>
+                    <x-ui.input wire:model.blur="clarity_api_key" placeholder="Paste Clarity API token..." :invalid="$errors->has('clarity_api_key')" />
+                    @error('clarity_api_key') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
                 </x-ui.field>
 
                 <x-ui.separator class="my-4" hidden horizontal />

@@ -15,12 +15,14 @@ class Project extends Model
         'customer_id',
         'status',
         'domain',
+        'clarity_api_key',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => ProjectStatusEnum::class,
+            'clarity_api_key' => 'encrypted',
         ];
     }
 

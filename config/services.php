@@ -36,6 +36,7 @@ return [
     ],
 
     'clarity' => [
+        'endpoint' => 'https://www.clarity.ms/export-data/api/v1/project-live-insights',
         'token' => env('CLARITY_KEY'),
     ],
 
