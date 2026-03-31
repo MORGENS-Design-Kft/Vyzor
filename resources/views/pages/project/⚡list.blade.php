@@ -62,19 +62,21 @@ new #[Layout('layouts.app')] class extends Component {
 <div class="p-6 space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Projects</h1>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">All projects assigned to you.</p>
+            <x-ui.heading level="h1" size="xl">Projects</x-ui.heading>
+            <x-ui.description class="mt-1">All projects assigned to you.</x-ui.description>
         </div>
         <x-ui.button variant="primary" icon="plus" as="a" href="/new-project">New Project</x-ui.button>
     </div>
 
     <x-ui.card class="overflow-hidden p-0! max-w-full!">
         @if ($projects->isEmpty())
-            <div class="text-center py-12">
-                <x-ui.icon name="folder-open" class="size-10 mx-auto text-neutral-300 dark:text-neutral-600" />
-                <p class="mt-2 text-neutral-500 dark:text-neutral-400">No projects found.</p>
-                <x-ui.button variant="outline" color="neutral" as="a" href="/new-project" class="mt-4">Create your first project</x-ui.button>
-            </div>
+            <x-ui.empty>
+                <x-ui.empty.contents>
+                    <x-ui.icon name="folder-open" class="size-10 text-neutral-300 dark:text-neutral-600" />
+                    <x-ui.text>No projects found.</x-ui.text>
+                    <x-ui.button variant="outline" color="neutral" as="a" href="/new-project" class="mt-2">Create your first project</x-ui.button>
+                </x-ui.empty.contents>
+            </x-ui.empty>
         @else
             <table class="w-full text-sm text-left">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">

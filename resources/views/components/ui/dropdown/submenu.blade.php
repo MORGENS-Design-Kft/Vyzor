@@ -33,7 +33,7 @@
     >
         <div class="flex items-center justify-between">
             {{ $label }}
-            <x-ui.icon name="chevron-right" variant="mini" class="inline-flex shrink-0 ml-2"/>
+            <x-ui.icon name="caret-right" class="inline-flex shrink-0 ml-2"/>
         </div>
     </x-ui.dropdown.item>
 

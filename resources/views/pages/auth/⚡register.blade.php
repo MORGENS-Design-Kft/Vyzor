@@ -74,32 +74,32 @@ new #[Layout('layouts.app')] class extends Component {
                     <x-ui.field required>
                         <x-ui.label>Name</x-ui.label>
                         <x-ui.input placeholder="Name..." wire:model="name" />
-                        @error('name') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                        <x-ui.error name="name" />
                     </x-ui.field>
                 @else
                     <x-ui.field required>
                         <x-ui.label>Company Name</x-ui.label>
                         <x-ui.input placeholder="Company name..." wire:model="company_name" />
-                        @error('company_name') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                        <x-ui.error name="company_name" />
                     </x-ui.field>
 
                     <x-ui.field>
                         <x-ui.label>Phone</x-ui.label>
                         <x-ui.input placeholder="Phone..." type="tel" wire:model="phone" />
-                        @error('phone') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                        <x-ui.error name="phone" />
                     </x-ui.field>
                 @endif
 
                 <x-ui.field required>
                     <x-ui.label>Email</x-ui.label>
                     <x-ui.input placeholder="E-mail..." type="email" wire:model="email" />
-                    @error('email') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <x-ui.error name="email" />
                 </x-ui.field>
 
                 <x-ui.field required>
                     <x-ui.label>Password</x-ui.label>
                     <x-ui.input placeholder="Password..." type="password" wire:model="password" />
-                    @error('password') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <x-ui.error name="password" />
                 </x-ui.field>
 
                 <x-ui.field required>

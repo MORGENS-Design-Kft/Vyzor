@@ -98,7 +98,7 @@ new #[Layout('layouts.app')] class extends Component {
         <x-ui.card size="2xl">
             <div class="flex items-center gap-2 mb-4">
                 <x-ui.icon name="users" />
-                <span class="font-semibold text-neutral-900 dark:text-neutral-100">Users</span>
+                <x-ui.heading level="h2" size="sm">Users</x-ui.heading>
                 <x-ui.badge variant="solid" color="blue" size="sm">{{ $users->count() }}</x-ui.badge>
             </div>
 
@@ -110,22 +110,19 @@ new #[Layout('layouts.app')] class extends Component {
                             <x-ui.field>
                                 <x-ui.label>Name</x-ui.label>
                                 <x-ui.input wire:model="editName" placeholder="Name..." :invalid="$errors->has('editName')" />
-                                @error('editName') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                                @enderror
+                                <x-ui.error name="editName" />
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>Email</x-ui.label>
                                 <x-ui.input wire:model="editEmail" type="email" placeholder="Email..."
                                     :invalid="$errors->has('editEmail')" />
-                                @error('editEmail') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                                @enderror
+                                <x-ui.error name="editEmail" />
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>New Password</x-ui.label>
                                 <x-ui.input wire:model="editPassword" type="password" placeholder="Leave blank to keep current..."
                                     :invalid="$errors->has('editPassword')" />
-                                @error('editPassword') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                                @enderror
+                                <x-ui.error name="editPassword" />
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>Confirm Password</x-ui.label>
@@ -150,7 +147,11 @@ new #[Layout('layouts.app')] class extends Component {
                     @endif
                 </div>
             @empty
-                <p class="text-neutral-500 dark:text-neutral-400 py-4 text-center">No users found.</p>
+                <x-ui.empty>
+                    <x-ui.empty.contents>
+                        <x-ui.text>No users found.</x-ui.text>
+                    </x-ui.empty.contents>
+                </x-ui.empty>
             @endforelse
         </x-ui.card>
 
@@ -158,7 +159,7 @@ new #[Layout('layouts.app')] class extends Component {
         <x-ui.card size="2xl">
             <div class="flex items-center gap-2 mb-4">
                 <x-ui.icon name="ps:buildings" />
-                <span class="font-semibold text-neutral-900 dark:text-neutral-100">Customers</span>
+                <x-ui.heading level="h2" size="sm">Customers</x-ui.heading>
                 <x-ui.badge variant="solid" color="emerald" size="sm">{{ $customers->count() }}</x-ui.badge>
             </div>
 
@@ -171,28 +172,24 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-ui.label>Company Name</x-ui.label>
                                 <x-ui.input wire:model="editCompanyName" placeholder="Company name..."
                                     :invalid="$errors->has('editCompanyName')" />
-                                @error('editCompanyName') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}
-                                </p> @enderror
+                                <x-ui.error name="editCompanyName" />
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>Email</x-ui.label>
                                 <x-ui.input wire:model="editEmail" type="email" placeholder="Email..."
                                     :invalid="$errors->has('editEmail')" />
-                                @error('editEmail') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                                @enderror
+                                <x-ui.error name="editEmail" />
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>Phone</x-ui.label>
                                 <x-ui.input wire:model="editPhone" type="tel" placeholder="Phone..." />
-                                @error('editPhone') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                                @enderror
+                                <x-ui.error name="editPhone" />
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>New Password</x-ui.label>
                                 <x-ui.input wire:model="editPassword" type="password" placeholder="Leave blank to keep current..."
                                     :invalid="$errors->has('editPassword')" />
-                                @error('editPassword') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                                @enderror
+                                <x-ui.error name="editPassword" />
                             </x-ui.field>
                             <x-ui.field>
                                 <x-ui.label>Confirm Password</x-ui.label>
@@ -222,7 +219,11 @@ new #[Layout('layouts.app')] class extends Component {
                     @endif
                 </div>
             @empty
-                <p class="text-neutral-500 dark:text-neutral-400 py-4 text-center">No customers found.</p>
+                <x-ui.empty>
+                    <x-ui.empty.contents>
+                        <x-ui.text>No customers found.</x-ui.text>
+                    </x-ui.empty.contents>
+                </x-ui.empty>
             @endforelse
         </x-ui.card>
     </div>

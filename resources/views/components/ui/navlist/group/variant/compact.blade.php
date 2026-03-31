@@ -25,13 +25,13 @@
     >
         <x-ui.icon 
             x-show="expanded"
-            name="chevron-down" 
+            name="caret-down"
             class="size-4"
         />
 
         <x-ui.icon 
             x-show="!expanded"
-            name="chevron-up" 
+            name="caret-up"
             style="display:none;"
             class="size-4"
         />

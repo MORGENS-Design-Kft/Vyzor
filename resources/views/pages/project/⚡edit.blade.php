@@ -85,14 +85,13 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-ui.field required>
                     <x-ui.label>Project Name</x-ui.label>
                     <x-ui.input wire:model.blur="name" placeholder="Project name..." :invalid="$errors->has('name')" />
-                    @error('name') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <x-ui.error name="name" />
                 </x-ui.field>
 
                 <x-ui.field>
                     <x-ui.label>Description</x-ui.label>
                     <x-ui.input wire:model.blur="description" placeholder="Project description..." />
-                    @error('description') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                    @enderror
+                    <x-ui.error name="description" />
                 </x-ui.field>
 
                 <x-ui.field required>
@@ -113,19 +112,19 @@ new #[Layout('layouts.app')] class extends Component {
                                 :color="$statusOption->hex()" />
                         @endforeach
                     </x-ui.radio.group>
-                    @error('status') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <x-ui.error name="status" />
                 </x-ui.field>
 
                 <x-ui.field required>
                     <x-ui.label>Domain</x-ui.label>
                     <x-ui.input wire:model.blur="domain" placeholder="example.com" :invalid="$errors->has('domain')" />
-                    @error('domain') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <x-ui.error name="domain" />
                 </x-ui.field>
 
                 <x-ui.field>
                     <x-ui.label>Clarity API Key</x-ui.label>
                     <x-ui.input wire:model.blur="clarity_api_key" placeholder="Paste Clarity API token..." :invalid="$errors->has('clarity_api_key')" />
-                    @error('clarity_api_key') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <x-ui.error name="clarity_api_key" />
                 </x-ui.field>
 
                 <x-ui.separator class="my-4" hidden horizontal />

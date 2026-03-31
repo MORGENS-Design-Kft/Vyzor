@@ -41,13 +41,12 @@ new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Componen
                 <x-ui.field required>
                     <x-ui.label>Email</x-ui.label>
                     <x-ui.input label="Email" placeholder="E-mail..." type="email" wire:model="email" />
-                    @error('email') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <x-ui.error name="email" />
                 </x-ui.field>
                 <x-ui.field required>
                     <x-ui.label>Password</x-ui.label>
                     <x-ui.input label="Password" placeholder="Password..." type="password" wire:model="password" />
-                    @error('password') <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
-                    @enderror
+                    <x-ui.error name="password" />
                 </x-ui.field>
                 <x-ui.field>
                     <x-ui.checkbox size="xs" label="Remember me" wire:model="remember" />

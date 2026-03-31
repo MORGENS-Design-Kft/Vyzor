@@ -105,7 +105,8 @@ class FetchClarity extends Command
 
     private function saveToDatabase(Project $project, array $data, int $days, ?string $dimension1, ?string $dimension2, ?string $dimension3): void
     {
-        $today = now()->toDateString();
+        $dateTo = now()->toDateString();
+        $dateFrom = now()->subDays($days - 1)->toDateString();
 
         foreach ($data as $metric) {
             $metricName = $metric['metricName'] ?? 'Unknown';
@@ -117,11 +118,12 @@ class FetchClarity extends Command
                     'dimension1' => $dimension1,
                     'dimension2' => $dimension2,
                     'dimension3' => $dimension3,
-                    'num_of_days' => $days,
-                    'fetched_for' => $today,
+                    'date_from' => $dateFrom,
+                    'date_to' => $dateTo,
                 ],
                 [
                     'data' => $metric['information'] ?? [],
+                    'fetched_for' => now(),
                 ]
             );
 

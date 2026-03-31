@@ -25,7 +25,8 @@
             "input",
             "select",
             "radio",
-            "dropdown"
+            "dropdown",
+            "error"
         ],
         "button": [
             "badge",

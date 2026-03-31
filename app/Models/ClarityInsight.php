@@ -13,7 +13,8 @@ class ClarityInsight extends Model
         'dimension2',
         'dimension3',
         'data',
-        'num_of_days',
+        'date_from',
+        'date_to',
         'fetched_for',
     ];
 
@@ -21,7 +22,9 @@ class ClarityInsight extends Model
     {
         return [
             'data' => 'array',
-            'fetched_for' => 'date',
+            'date_from' => 'date',
+            'date_to' => 'date',
+            'fetched_for' => 'datetime',
         ];
     }
 }

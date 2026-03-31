@@ -79,7 +79,12 @@
                     <x-ui.navlist.group label="Project">
                         <x-ui.navlist.item disabled label="Overview" icon="chart-bar" href="/dashboard" />
                         <x-ui.navlist.item disabled label="Reports" icon="projector-screen-chart" />
-                        <x-ui.navlist.item label="Clarity" icon="squares-four" href="/clarity" />
+                        <x-ui.navlist.group label="Clarity" variant="compact">
+                            <x-ui.navlist.item label="Snapshot" icon="camera" href="/clarity/snapshot"
+                                :active="request()->is('clarity/snapshot')" />
+                            <x-ui.navlist.item label="Charts" icon="chart-line-up" href="/clarity/trends"
+                                :active="request()->is('clarity/trends')" />
+                        </x-ui.navlist.group>
                         <x-ui.navlist.item disabled label="ContentSquare" icon="cube" />
                     </x-ui.navlist.group>
                     <x-ui.navlist.group label="System">
