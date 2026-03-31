@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use App\Models\User;
+use App\UserTypeEnum;
 use Illuminate\Support\Facades\DB;
 
 new #[Layout('layouts.app')] class extends Component {
@@ -36,13 +37,13 @@ new #[Layout('layouts.app')] class extends Component {
 
         DB::transaction(function () {
             $user = User::create([
-                'type' => $this->type,
-                'name' => $this->type === 'web' ? $this->name : $this->company_name,
+                'type' => UserTypeEnum::from($this->type),
+                'name' => $this->type === UserTypeEnum::WEB->value ? $this->name : $this->company_name,
                 'email' => $this->email,
                 'password' => $this->password,
             ]);
 
-            if ($this->type === 'customer') {
+            if ($this->type === UserTypeEnum::CUSTOMER->value) {
                 $user->customerProfile()->create([
                     'company_name' => $this->company_name,
                     'phone' => $this->phone ?: null,

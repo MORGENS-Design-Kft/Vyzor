@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\UserTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -29,17 +30,23 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'type' => UserTypeEnum::class,
         ];
     }
 
     public function isCustomer(): bool
     {
-        return $this->type === 'customer';
+        return $this->type === UserTypeEnum::CUSTOMER;
     }
 
     public function isUser(): bool
     {
-        return $this->type === 'web';
+        return $this->type === UserTypeEnum::WEB;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->type === UserTypeEnum::ADMIN;
     }
 
     public function profile(): HasOne

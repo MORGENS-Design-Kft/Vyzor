@@ -24,9 +24,11 @@ new class extends Component {
     {
         if (!$projectId) return;
 
-        $owns = Project::where('owner_id', auth()->id())->where('id', $projectId)->exists();
+        $accessible = auth()->user()->isAdmin()
+            ? Project::where('id', $projectId)->exists()
+            : Project::where('owner_id', auth()->id())->where('id', $projectId)->exists();
 
-        if ($owns) {
+        if ($accessible) {
             $this->selectedProject = (string) $projectId;
             session(['current_project_id' => $projectId]);
         } else {
@@ -37,7 +39,11 @@ new class extends Component {
     #[Computed]
     public function projects()
     {
-        return Project::with('customer')->where('owner_id', auth()->id())->get()->groupBy(fn($project) => $project->customer?->name ?? 'No Customer');
+        $query = auth()->user()->isAdmin()
+            ? Project::with('customer')
+            : Project::with('customer')->where('owner_id', auth()->id());
+
+        return $query->get()->groupBy(fn($project) => $project->customer?->name ?? 'No Customer');
     }
 
     public function updatedSelectedProject($value)

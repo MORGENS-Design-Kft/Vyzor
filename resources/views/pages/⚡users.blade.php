@@ -5,6 +5,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use App\Models\User;
 use App\Models\CustomerProfile;
+use App\UserTypeEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     public ?int $editingId = null;
@@ -80,8 +81,8 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'users' => User::where('type', 'web')->get(),
-            'customers' => User::where('type', 'customer')->with('customerProfile')->get(),
+            'users' => User::where('type', UserTypeEnum::WEB)->get(),
+            'customers' => User::where('type', UserTypeEnum::CUSTOMER)->with('customerProfile')->get(),
         ];
     }
 };

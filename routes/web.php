@@ -10,7 +10,7 @@ Route::get('/', function () {
 
     return Auth::user()->isCustomer()
         ? redirect()->route('customer.dashboard')
-        : redirect()->route('dashboard');
+        : redirect()->route('dashboard');  // admin also goes here
 });
 
 Route::middleware('guest')->group(function () {

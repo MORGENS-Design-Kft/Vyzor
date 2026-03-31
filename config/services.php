@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'clarity' => [
+        'token' => env('CLARITY_KEY'),
+    ],
+
 ];

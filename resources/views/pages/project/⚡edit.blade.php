@@ -6,6 +6,7 @@ use Livewire\Attributes\Validate;
 use App\Models\User;
 use App\Models\Project;
 use App\ProjectStatusEnum;
+use App\UserTypeEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     public Project $project;
@@ -27,7 +28,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function mount(Project $project): void
     {
-        abort_unless($project->owner_id === auth()->id(), 403);
+        abort_unless(auth()->user()->isAdmin() || $project->owner_id === auth()->id(), 403);
 
         $this->project = $project;
         $this->name = $project->name;
@@ -65,7 +66,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'customers' => User::where('type', 'customer')->get(),
+            'customers' => User::where('type', \App\UserTypeEnum::CUSTOMER)->get(),
             'statuses' => ProjectStatusEnum::cases(),
         ];
     }

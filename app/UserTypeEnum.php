@@ -1,0 +1,19 @@
+<?php
+
+namespace App;
+
+enum UserTypeEnum: string
+{
+    case WEB = 'web';
+    case CUSTOMER = 'customer';
+    case ADMIN = 'admin';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::WEB => 'User',
+            self::CUSTOMER => 'Customer',
+            self::ADMIN => 'Admin',
+        };
+    }
+}

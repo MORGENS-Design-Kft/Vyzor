@@ -8,9 +8,16 @@ use App\ProjectStatusEnum;
 
 new #[Layout('layouts.app')] class extends Component {
 
+    private function projectQuery()
+    {
+        return auth()->user()->isAdmin()
+            ? Project::query()
+            : Project::where('owner_id', auth()->id());
+    }
+
     public function setActiveProject(int $projectId): void
     {
-        Project::where('owner_id', auth()->id())->findOrFail($projectId);
+        $this->projectQuery()->findOrFail($projectId);
         session(['current_project_id' => $projectId]);
         $this->dispatch('current-project-changed', projectId: $projectId);
     }
@@ -23,13 +30,13 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function updateStatus(int $projectId, string $status): void
     {
-        $project = Project::where('owner_id', auth()->id())->findOrFail($projectId);
+        $project = $this->projectQuery()->findOrFail($projectId);
         $project->update(['status' => ProjectStatusEnum::from($status)]);
     }
 
     public function deleteProject(int $projectId): void
     {
-        $project = Project::where('owner_id', auth()->id())->findOrFail($projectId);
+        $project = $this->projectQuery()->findOrFail($projectId);
         $project->delete();
 
         if (session('current_project_id') == $projectId) {
@@ -41,8 +48,8 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'projects' => Project::with('customer')
-                ->where('owner_id', auth()->id())
+            'projects' => $this->projectQuery()
+                ->with('customer')
                 ->latest('updated_at')
                 ->get(),
             'statuses' => ProjectStatusEnum::cases(),

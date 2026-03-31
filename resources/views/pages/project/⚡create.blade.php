@@ -6,6 +6,7 @@ use Livewire\Attributes\Validate;
 use App\Models\User;
 use App\Models\Project;
 use App\ProjectStatusEnum;
+use App\UserTypeEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     #[Validate('required|string|max:255')]
@@ -56,7 +57,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'customers' => User::where('type', 'customer')->get(),
+            'customers' => User::where('type', UserTypeEnum::CUSTOMER)->get(),
             'statuses' => ProjectStatusEnum::cases(),
         ];
     }
