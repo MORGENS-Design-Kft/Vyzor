@@ -8,15 +8,6 @@ use Carbon\Carbon;
 
 new #[Layout('layouts.app')] class extends Component {
 
-    public string $rangeStart = '';
-    public string $rangeEnd = '';
-
-    public function mount(): void
-    {
-        $this->rangeEnd = now()->format('Y-m-d');
-        $this->rangeStart = now()->subDays(7)->format('Y-m-d');
-    }
-
     #[On('current-project-changed')]
     public function onProjectChanged() {}
 
@@ -28,9 +19,10 @@ new #[Layout('layouts.app')] class extends Component {
             return ['chartData' => null];
         }
 
-        $start = Carbon::parse($this->rangeStart)->startOfDay();
-        $end = Carbon::parse($this->rangeEnd)->endOfDay();
+        $start = now()->subDays(3)->startOfDay();
+        $end = now()->endOfDay();
 
+        // Use date_from to find data covering the last 3 days
         $insights = ClarityInsight::where('project_id', $projectId)
             ->where('date_from', '>=', $start)
             ->where('date_to', '<=', $end)
@@ -38,11 +30,12 @@ new #[Layout('layouts.app')] class extends Component {
             ->orderBy('date_from')
             ->get();
 
-        // Group by date range
-        $grouped = $insights->groupBy(fn ($i) => $i->date_from->eq($i->date_to)
-            ? $i->date_from->format('Y-m-d')
-            : $i->date_from->format('Y-m-d') . ' – ' . $i->date_to->format('Y-m-d')
-        );
+        // Group by the date range the data covers (date_from → date_to)
+        $grouped = $insights->groupBy(function ($i) {
+            $from = $i->date_from->format('M d');
+            $to = $i->date_to->format('M d');
+            return $from === $to ? $from : "{$from} – {$to}";
+        });
 
         $labels = $grouped->keys()->toArray();
 
@@ -93,13 +86,10 @@ new #[Layout('layouts.app')] class extends Component {
             }
         }
 
-        // --- Latest snapshot device/browser/country breakdown for doughnuts ---
-        $latestTime = $grouped->keys()->last();
-        $latestMetrics = $latestTime ? $grouped[$latestTime] : collect();
-
-        $deviceBreakdown = $this->buildBreakdown($latestMetrics, $projectId, $end, 'Device');
-        $browserBreakdown = $this->buildBreakdown($latestMetrics, $projectId, $end, 'Browser');
-        $countryBreakdown = $this->buildBreakdown($latestMetrics, $projectId, $end, 'Country');
+        // --- Latest snapshot breakdowns for doughnuts ---
+        $deviceBreakdown = $this->buildBreakdown($projectId, $end, 'Device');
+        $browserBreakdown = $this->buildBreakdown($projectId, $end, 'Browser');
+        $countryBreakdown = $this->buildBreakdown($projectId, $end, 'Country');
 
         return [
             'chartData' => [
@@ -119,13 +109,12 @@ new #[Layout('layouts.app')] class extends Component {
         ];
     }
 
-    private function buildBreakdown($latestMetrics, $projectId, $end, string $dimensionMetric): array
+    private function buildBreakdown($projectId, $end, string $dimensionMetric): array
     {
-        // Check dimension-based insights
         $insight = ClarityInsight::where('project_id', $projectId)
             ->where('metric_name', $dimensionMetric)
             ->where('date_to', '<=', $end)
-            ->orderByDesc('date_to')
+            ->orderByDesc('date_from')
             ->first();
 
         if (!$insight || empty($insight->data)) {
@@ -144,17 +133,10 @@ new #[Layout('layouts.app')] class extends Component {
 };
 ?>
 
-<div wire:key="{{ md5(json_encode($chartData)) }}" class="p-6 space-y-6" x-data="clarityTrends(@js($chartData))" x-init="initCharts()">
-    <div class="flex items-center justify-between">
-        <div>
-            <x-ui.heading level="h1" size="xl">Clarity Trends</x-ui.heading>
-            <x-ui.description class="mt-1">Track how your Clarity metrics change over time.</x-ui.description>
-        </div>
-        <div class="flex items-center gap-3">
-            <x-ui.input type="date" wire:model.live="rangeStart" class="w-40" />
-            <span class="text-neutral-400">to</span>
-            <x-ui.input type="date" wire:model.live="rangeEnd" class="w-40" />
-        </div>
+<div class="p-6 space-y-6" id="clarity-trends-root" data-chart='@json($chartData)'>
+    <div>
+        <x-ui.heading level="h1" size="xl">Clarity Trends</x-ui.heading>
+        <x-ui.description class="mt-1">Last 3 days of Clarity data for the current project.</x-ui.description>
     </div>
 
     @if (!$chartData)
@@ -171,15 +153,15 @@ new #[Layout('layouts.app')] class extends Component {
             <x-ui.empty>
                 <x-ui.empty.contents>
                     <x-ui.icon name="chart-line-up" class="size-10 text-neutral-300 dark:text-neutral-600" />
-                    <x-ui.text>No trend data available for this date range. Fetch data at different times to build up history.</x-ui.text>
+                    <x-ui.text>No trend data available yet. Fetch Clarity data multiple times from the Snapshot page to build up trend history.</x-ui.text>
                 </x-ui.empty.contents>
             </x-ui.empty>
         </x-ui.card>
     @else
         {{-- Traffic Over Time --}}
         <x-ui.heading level="h3" size="md" class="mb-3">Traffic Over Time</x-ui.heading>
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            <x-ui.card class="border-l-4 border-l-blue-500">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <x-ui.card size="full" class="border-l-4 border-l-blue-500">
                 <div class="flex items-center gap-2 mb-4">
                     <x-ui.icon name="users" class="size-5 text-blue-500" />
                     <x-ui.heading level="h3" size="sm">Sessions & Unique Users</x-ui.heading>
@@ -189,7 +171,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             </x-ui.card>
 
-            <x-ui.card class="border-l-4 border-l-emerald-500">
+            <x-ui.card size="full" class="border-l-4 border-l-emerald-500">
                 <div class="flex items-center gap-2 mb-4">
                     <x-ui.icon name="copy" class="size-5 text-emerald-500" />
                     <x-ui.heading level="h3" size="sm">Pages Per Session</x-ui.heading>
@@ -202,8 +184,8 @@ new #[Layout('layouts.app')] class extends Component {
 
         {{-- Engagement Over Time --}}
         <x-ui.heading level="h3" size="md" class="mt-6 mb-3">Engagement Over Time</x-ui.heading>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <x-ui.card class="border-l-4 border-l-cyan-500">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <x-ui.card size="full" class="border-l-4 border-l-cyan-500">
                 <div class="flex items-center gap-2 mb-4">
                     <x-ui.icon name="clock" class="size-5 text-cyan-500" />
                     <x-ui.heading level="h3" size="sm">Engagement Time (seconds)</x-ui.heading>
@@ -213,7 +195,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             </x-ui.card>
 
-            <x-ui.card class="border-l-4 border-l-amber-500">
+            <x-ui.card size="full" class="border-l-4 border-l-amber-500">
                 <div class="flex items-center gap-2 mb-4">
                     <x-ui.icon name="arrows-down-up" class="size-5 text-amber-500" />
                     <x-ui.heading level="h3" size="sm">Average Scroll Depth (%)</x-ui.heading>
@@ -226,7 +208,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         {{-- UX Signals Over Time --}}
         <x-ui.heading level="h3" size="md" class="mt-6 mb-3">UX Signals Over Time</x-ui.heading>
-        <x-ui.card class="border-l-4 border-l-red-500">
+        <x-ui.card size="full" class="border-l-4 border-l-red-500">
             <div class="flex items-center gap-2 mb-4">
                 <x-ui.icon name="warning" class="size-5 text-red-500" />
                 <x-ui.heading level="h3" size="sm">UX Issues</x-ui.heading>
@@ -238,8 +220,8 @@ new #[Layout('layouts.app')] class extends Component {
 
         {{-- Distribution Doughnuts --}}
         <x-ui.heading level="h3" size="md" class="mt-6 mb-3">Audience Breakdown (Latest Snapshot)</x-ui.heading>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <x-ui.card class="border-l-4 border-l-violet-500">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <x-ui.card size="full" class="border-l-4 border-l-violet-500">
                 <div class="flex items-center gap-2 mb-4">
                     <x-ui.icon name="device-mobile" class="size-5 text-violet-500" />
                     <x-ui.heading level="h3" size="sm">Devices</x-ui.heading>
@@ -249,7 +231,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             </x-ui.card>
 
-            <x-ui.card class="border-l-4 border-l-blue-500">
+            <x-ui.card size="full" class="border-l-4 border-l-blue-500">
                 <div class="flex items-center gap-2 mb-4">
                     <x-ui.icon name="globe" class="size-5 text-blue-500" />
                     <x-ui.heading level="h3" size="sm">Browsers</x-ui.heading>
@@ -259,7 +241,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             </x-ui.card>
 
-            <x-ui.card class="border-l-4 border-l-amber-500">
+            <x-ui.card size="full" class="border-l-4 border-l-amber-500">
                 <div class="flex items-center gap-2 mb-4">
                     <x-ui.icon name="map-pin" class="size-5 text-amber-500" />
                     <x-ui.heading level="h3" size="sm">Countries</x-ui.heading>
@@ -278,259 +260,228 @@ new #[Layout('layouts.app')] class extends Component {
 
 @script
 <script>
-Alpine.data('clarityTrends', (chartData) => ({
-    charts: [],
-    chartData: chartData,
+    const root = document.getElementById('clarity-trends-root');
+    if (!root) {
+        console.warn('clarity-trends-root not found');
+    } else {
+    const chartData = JSON.parse(root.dataset.chart);
 
-    destroyCharts() {
-        this.charts.forEach(c => c.destroy());
-        this.charts = [];
-    },
+    if (!chartData || !chartData.labels || chartData.labels.length === 0) return;
 
-    initCharts() {
-        if (!this.chartData || !this.chartData.labels || this.chartData.labels.length === 0) return;
+    const isDark = document.documentElement.classList.contains('dark') ||
+        window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        this.destroyCharts();
+    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+    const textColor = isDark ? '#a3a3a3' : '#525252';
 
-        const isDark = document.documentElement.classList.contains('dark') ||
-            window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-        const textColor = isDark ? '#a3a3a3' : '#525252';
-
-        const baseOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: { color: textColor, boxWidth: 12, padding: 16 }
-                },
-                tooltip: {
-                    backgroundColor: isDark ? '#262626' : '#fff',
-                    titleColor: isDark ? '#e5e5e5' : '#171717',
-                    bodyColor: isDark ? '#a3a3a3' : '#525252',
-                    borderColor: isDark ? '#404040' : '#e5e5e5',
-                    borderWidth: 1,
-                }
+    const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: textColor, boxWidth: 12, padding: 16 }
             },
+            tooltip: {
+                backgroundColor: isDark ? '#262626' : '#fff',
+                titleColor: isDark ? '#e5e5e5' : '#171717',
+                bodyColor: isDark ? '#a3a3a3' : '#525252',
+                borderColor: isDark ? '#404040' : '#e5e5e5',
+                borderWidth: 1,
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: textColor, maxRotation: 45 },
+                grid: { color: gridColor }
+            },
+            y: {
+                ticks: { color: textColor },
+                grid: { color: gridColor },
+                beginAtZero: true
+            }
+        }
+    };
+
+    const labels = chartData.labels;
+
+    // Sessions & Unique Users
+    new Chart(document.getElementById('sessionsChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Sessions',
+                    data: chartData.sessions,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.1)',
+                    fill: true, tension: 0.3,
+                },
+                {
+                    label: 'Unique Users',
+                    data: chartData.uniqueUsers,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139,92,246,0.1)',
+                    fill: true, tension: 0.3,
+                },
+                {
+                    label: 'Bot Sessions',
+                    data: chartData.botSessions,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239,68,68,0.05)',
+                    borderDash: [5, 5],
+                    fill: false, tension: 0.3,
+                }
+            ]
+        },
+        options: baseOptions
+    });
+
+    // Pages Per Session
+    new Chart(document.getElementById('pagesPerSessionChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Pages / Session',
+                data: chartData.pagesPerSession,
+                backgroundColor: 'rgba(16,185,129,0.6)',
+                borderColor: '#10b981',
+                borderWidth: 1, borderRadius: 4,
+            }]
+        },
+        options: baseOptions
+    });
+
+    // Engagement Time
+    new Chart(document.getElementById('engagementChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Total Time',
+                    data: chartData.totalTime,
+                    borderColor: '#06b6d4',
+                    backgroundColor: 'rgba(6,182,212,0.1)',
+                    fill: true, tension: 0.3,
+                },
+                {
+                    label: 'Active Time',
+                    data: chartData.activeTime,
+                    borderColor: '#14b8a6',
+                    backgroundColor: 'rgba(20,184,166,0.1)',
+                    fill: true, tension: 0.3,
+                }
+            ]
+        },
+        options: baseOptions
+    });
+
+    // Scroll Depth
+    new Chart(document.getElementById('scrollChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Avg Scroll Depth %',
+                data: chartData.scrollDepth,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245,158,11,0.1)',
+                fill: true, tension: 0.3,
+            }]
+        },
+        options: {
+            ...baseOptions,
             scales: {
-                x: {
-                    ticks: { color: textColor, maxRotation: 45 },
-                    grid: { color: gridColor }
-                },
-                y: {
-                    ticks: { color: textColor },
-                    grid: { color: gridColor },
-                    beginAtZero: true
-                }
+                ...baseOptions.scales,
+                y: { ...baseOptions.scales.y, max: 100 }
             }
-        };
+        }
+    });
 
-        const labels = this.chartData.labels;
+    // UX Signals
+    const signalColors = {
+        DeadClickCount:   { border: '#f97316', bg: 'rgba(249,115,22,0.1)' },
+        RageClickCount:   { border: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+        QuickbackClick:   { border: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+        ExcessiveScroll:  { border: '#eab308', bg: 'rgba(234,179,8,0.1)' },
+        ScriptErrorCount: { border: '#e11d48', bg: 'rgba(225,29,72,0.1)' },
+        ErrorClickCount:  { border: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
+    };
+    const signalLabels = {
+        DeadClickCount: 'Dead Clicks',
+        RageClickCount: 'Rage Clicks',
+        QuickbackClick: 'Quick Backs',
+        ExcessiveScroll: 'Excessive Scroll',
+        ScriptErrorCount: 'Script Errors',
+        ErrorClickCount: 'Error Clicks',
+    };
 
-        // Sessions & Unique Users
-        this.charts.push(new Chart(document.getElementById('sessionsChart'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [
-                    {
-                        label: 'Sessions',
-                        data: this.chartData.sessions,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59,130,246,0.1)',
-                        fill: true,
-                        tension: 0.3,
-                    },
-                    {
-                        label: 'Unique Users',
-                        data: this.chartData.uniqueUsers,
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139,92,246,0.1)',
-                        fill: true,
-                        tension: 0.3,
-                    },
-                    {
-                        label: 'Bot Sessions',
-                        data: this.chartData.botSessions,
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239,68,68,0.05)',
-                        borderDash: [5, 5],
-                        fill: false,
-                        tension: 0.3,
-                    }
-                ]
-            },
-            options: baseOptions
+    const signalDatasets = Object.entries(chartData.signals)
+        .filter(([_, values]) => values.some(v => v > 0))
+        .map(([key, values]) => ({
+            label: signalLabels[key] || key,
+            data: values,
+            borderColor: signalColors[key]?.border || '#888',
+            backgroundColor: signalColors[key]?.bg || 'rgba(136,136,136,0.1)',
+            fill: false, tension: 0.3,
         }));
 
-        // Pages Per Session
-        this.charts.push(new Chart(document.getElementById('pagesPerSessionChart'), {
-            type: 'bar',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Pages / Session',
-                    data: this.chartData.pagesPerSession,
-                    backgroundColor: 'rgba(16,185,129,0.6)',
-                    borderColor: '#10b981',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                }]
-            },
-            options: baseOptions
-        }));
+    new Chart(document.getElementById('signalsChart'), {
+        type: 'line',
+        data: { labels, datasets: signalDatasets },
+        options: baseOptions
+    });
 
-        // Engagement Time
-        this.charts.push(new Chart(document.getElementById('engagementChart'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [
-                    {
-                        label: 'Total Time',
-                        data: this.chartData.totalTime,
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6,182,212,0.1)',
-                        fill: true,
-                        tension: 0.3,
-                    },
-                    {
-                        label: 'Active Time',
-                        data: this.chartData.activeTime,
-                        borderColor: '#14b8a6',
-                        backgroundColor: 'rgba(20,184,166,0.1)',
-                        fill: true,
-                        tension: 0.3,
-                    }
-                ]
-            },
-            options: baseOptions
-        }));
-
-        // Scroll Depth
-        this.charts.push(new Chart(document.getElementById('scrollChart'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Avg Scroll Depth %',
-                    data: this.chartData.scrollDepth,
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245,158,11,0.1)',
-                    fill: true,
-                    tension: 0.3,
-                }]
-            },
-            options: {
-                ...baseOptions,
-                scales: {
-                    ...baseOptions.scales,
-                    y: {
-                        ...baseOptions.scales.y,
-                        max: 100,
-                    }
-                }
+    // Doughnut charts
+    const doughnutColors = [
+        '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444',
+        '#06b6d4', '#ec4899', '#84cc16'
+    ];
+    const doughnutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: textColor, boxWidth: 10, padding: 10, font: { size: 11 } }
             }
-        }));
-
-        // UX Signals
-        const signalColors = {
-            DeadClickCount:  { border: '#f97316', bg: 'rgba(249,115,22,0.1)' },
-            RageClickCount:  { border: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-            QuickbackClick:  { border: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-            ExcessiveScroll: { border: '#eab308', bg: 'rgba(234,179,8,0.1)' },
-            ScriptErrorCount:{ border: '#e11d48', bg: 'rgba(225,29,72,0.1)' },
-            ErrorClickCount: { border: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
-        };
-        const signalLabels = {
-            DeadClickCount: 'Dead Clicks',
-            RageClickCount: 'Rage Clicks',
-            QuickbackClick: 'Quick Backs',
-            ExcessiveScroll: 'Excessive Scroll',
-            ScriptErrorCount: 'Script Errors',
-            ErrorClickCount: 'Error Clicks',
-        };
-
-        const signalDatasets = Object.entries(this.chartData.signals)
-            .filter(([_, values]) => values.some(v => v > 0))
-            .map(([key, values]) => ({
-                label: signalLabels[key] || key,
-                data: values,
-                borderColor: signalColors[key]?.border || '#888',
-                backgroundColor: signalColors[key]?.bg || 'rgba(136,136,136,0.1)',
-                fill: false,
-                tension: 0.3,
-            }));
-
-        this.charts.push(new Chart(document.getElementById('signalsChart'), {
-            type: 'line',
-            data: { labels, datasets: signalDatasets },
-            options: baseOptions
-        }));
-
-        // Doughnut charts for breakdowns
-        const doughnutColors = [
-            '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444',
-            '#06b6d4', '#ec4899', '#84cc16'
-        ];
-
-        const doughnutOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: textColor, boxWidth: 10, padding: 10, font: { size: 11 } }
-                }
-            }
-        };
-
-        if (this.chartData.deviceBreakdown.labels.length > 0) {
-            this.charts.push(new Chart(document.getElementById('deviceChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: this.chartData.deviceBreakdown.labels,
-                    datasets: [{
-                        data: this.chartData.deviceBreakdown.values,
-                        backgroundColor: doughnutColors,
-                        borderWidth: 0,
-                    }]
-                },
-                options: doughnutOptions
-            }));
         }
+    };
 
-        if (this.chartData.browserBreakdown.labels.length > 0) {
-            this.charts.push(new Chart(document.getElementById('browserChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: this.chartData.browserBreakdown.labels,
-                    datasets: [{
-                        data: this.chartData.browserBreakdown.values,
-                        backgroundColor: doughnutColors,
-                        borderWidth: 0,
-                    }]
-                },
-                options: doughnutOptions
-            }));
-        }
-
-        if (this.chartData.countryBreakdown.labels.length > 0) {
-            this.charts.push(new Chart(document.getElementById('countryChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: this.chartData.countryBreakdown.labels,
-                    datasets: [{
-                        data: this.chartData.countryBreakdown.values,
-                        backgroundColor: doughnutColors,
-                        borderWidth: 0,
-                    }]
-                },
-                options: doughnutOptions
-            }));
-        }
+    if (chartData.deviceBreakdown.labels.length > 0) {
+        new Chart(document.getElementById('deviceChart'), {
+            type: 'doughnut',
+            data: {
+                labels: chartData.deviceBreakdown.labels,
+                datasets: [{ data: chartData.deviceBreakdown.values, backgroundColor: doughnutColors, borderWidth: 0 }]
+            },
+            options: doughnutOptions
+        });
     }
-}));
+
+    if (chartData.browserBreakdown.labels.length > 0) {
+        new Chart(document.getElementById('browserChart'), {
+            type: 'doughnut',
+            data: {
+                labels: chartData.browserBreakdown.labels,
+                datasets: [{ data: chartData.browserBreakdown.values, backgroundColor: doughnutColors, borderWidth: 0 }]
+            },
+            options: doughnutOptions
+        });
+    }
+
+    if (chartData.countryBreakdown.labels.length > 0) {
+        new Chart(document.getElementById('countryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: chartData.countryBreakdown.labels,
+                datasets: [{ data: chartData.countryBreakdown.values, backgroundColor: doughnutColors, borderWidth: 0 }]
+            },
+            options: doughnutOptions
+        });
+    }
+    }
 </script>
 @endscript

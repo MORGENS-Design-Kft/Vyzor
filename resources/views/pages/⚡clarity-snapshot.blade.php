@@ -49,15 +49,23 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $projectId = session('current_project_id');
 
-        $selectedDate = \Carbon\Carbon::parse($this->datetime)->toDateString();
+        if (!$projectId) {
+            $insights = collect();
+        } else {
+            $selectedTime = \Carbon\Carbon::parse($this->datetime)->startOfHour();
 
-        $insights = $projectId
-            ? ClarityInsight::where('project_id', $projectId)
-                ->where('date_from', '<=', $selectedDate)
-                ->where('date_to', '>=', $selectedDate)
-                ->get()
-                ->keyBy('metric_name')
-            : collect();
+            // Find the fetch closest to the selected datetime
+            $closestFetch = ClarityInsight::where('project_id', $projectId)
+                ->orderByRaw('ABS(EXTRACT(EPOCH FROM (fetched_for - ?)))', [$selectedTime])
+                ->value('fetched_for');
+
+            $insights = $closestFetch
+                ? ClarityInsight::where('project_id', $projectId)
+                    ->where('fetched_for', $closestFetch)
+                    ->get()
+                    ->keyBy('metric_name')
+                : collect();
+        }
 
         return ['insights' => $insights];
     }
@@ -71,7 +79,7 @@ new #[Layout('layouts.app')] class extends Component {
             <x-ui.description class="mt-1">Single point-in-time Microsoft Clarity data for the current project.</x-ui.description>
         </div>
         <div class="flex items-center gap-3">
-            <x-ui.input type="datetime-local" wire:model.live="datetime" class="w-52" />
+            {{-- <x-ui.date-picker type="datetime-local" wire:model.live="datetime" class="w-60" /> --}}
             <x-ui.button variant="primary" icon="arrow-clockwise" wire:click="fetchInfo" wire:loading.attr="loading">
                 Fetch info
             </x-ui.button>
@@ -101,7 +109,7 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
             @if ($traffic = $insights->get('Traffic'))
                 @php $t = $traffic->data[0] ?? []; @endphp
-                <x-ui.card class="border-l-4 border-l-blue-500">
+                <x-ui.card size="full" class="border-l-4 border-l-blue-500">
                     <div class="flex items-center gap-2 mb-1">
                         <x-ui.icon name="users" class="size-4 text-blue-500" />
                         <x-ui.description class="uppercase tracking-wide text-xs!">Sessions</x-ui.description>
@@ -109,14 +117,14 @@ new #[Layout('layouts.app')] class extends Component {
                     <x-ui.heading level="h3" size="xl">{{ number_format($t['totalSessionCount'] ?? 0) }}</x-ui.heading>
                     <x-ui.description class="text-xs! mt-1">{{ number_format($t['totalBotSessionCount'] ?? 0) }} bots</x-ui.description>
                 </x-ui.card>
-                <x-ui.card class="border-l-4 border-l-violet-500">
+                <x-ui.card size="full" class="border-l-4 border-l-violet-500">
                     <div class="flex items-center gap-2 mb-1">
                         <x-ui.icon name="user" class="size-4 text-violet-500" />
                         <x-ui.description class="uppercase tracking-wide text-xs!">Unique Users</x-ui.description>
                     </div>
                     <x-ui.heading level="h3" size="xl">{{ number_format($t['distinctUserCount'] ?? 0) }}</x-ui.heading>
                 </x-ui.card>
-                <x-ui.card class="border-l-4 border-l-emerald-500">
+                <x-ui.card size="full" class="border-l-4 border-l-emerald-500">
                     <div class="flex items-center gap-2 mb-1">
                         <x-ui.icon name="copy" class="size-4 text-emerald-500" />
                         <x-ui.description class="uppercase tracking-wide text-xs!">Pages / Session</x-ui.description>
@@ -127,7 +135,7 @@ new #[Layout('layouts.app')] class extends Component {
 
             @if ($scroll = $insights->get('ScrollDepth'))
                 @php $s = $scroll->data[0] ?? []; @endphp
-                <x-ui.card class="border-l-4 border-l-amber-500">
+                <x-ui.card size="full" class="border-l-4 border-l-amber-500">
                     <div class="flex items-center gap-2 mb-1">
                         <x-ui.icon name="arrows-down-up" class="size-4 text-amber-500" />
                         <x-ui.description class="uppercase tracking-wide text-xs!">Avg Scroll Depth</x-ui.description>
@@ -143,14 +151,14 @@ new #[Layout('layouts.app')] class extends Component {
         @if ($engagement = $insights->get('EngagementTime'))
             @php $e = $engagement->data[0] ?? []; @endphp
             <div class="grid grid-cols-2 lg:grid-cols-10 gap-4">
-                <x-ui.card class="border-l-4 border-l-cyan-500">
+                <x-ui.card size="full" class="border-l-4 border-l-cyan-500">
                     <div class="flex items-center gap-2 mb-1">
                         <x-ui.icon name="clock" class="size-4 text-cyan-500" />
                         <x-ui.description class="uppercase tracking-wide text-xs!">Total Time</x-ui.description>
                     </div>
                     <x-ui.heading level="h3" size="xl">{{ $e['totalTime'] ?? 0 }}s</x-ui.heading>
                 </x-ui.card>
-                <x-ui.card class="border-l-4 border-l-teal-500">
+                <x-ui.card size="full" class="border-l-4 border-l-teal-500">
                     <div class="flex items-center gap-2 mb-1">
                         <x-ui.icon name="timer" class="size-4 text-teal-500" />
                         <x-ui.description class="uppercase tracking-wide text-xs!">Active Time</x-ui.description>
@@ -183,7 +191,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 $d = $metric->data[0] ?? [];
                                 $pct = $d['sessionsWithMetricPercentage'] ?? 0;
                             @endphp
-                            <x-ui.card class="border-t-4 border-t-{{ $config['color'] }}-500">
+                            <x-ui.card size="full" class="border-t-4 border-t-{{ $config['color'] }}-500">
                                 <div class="flex items-center gap-2 mb-1">
                                     <x-ui.icon name="{{ $config['icon'] }}" class="size-4 text-{{ $config['color'] }}-500" />
                                     <x-ui.description class="uppercase tracking-wide text-xs!">{{ $config['label'] }}</x-ui.description>
@@ -217,11 +225,11 @@ new #[Layout('layouts.app')] class extends Component {
             ];
         @endphp
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @foreach ($dimensions as $dim => $config)
                 @if ($metric = $insights->get($dim))
                     @php $scrollable = count($metric->data) > 20; @endphp
-                    <x-ui.card @class(['flex flex-col', 'max-h-200' => $scrollable])>
+                    <x-ui.card size="full" @class(['flex flex-col', 'max-h-200' => $scrollable])>
                         <div class="flex items-center gap-2 mb-3 shrink-0">
                             <x-ui.icon name="{{ $config['icon'] }}" class="size-5 text-{{ $config['color'] }}-500" />
                             <x-ui.heading level="h3" size="sm">{{ $config['label'] }}</x-ui.heading>
@@ -251,7 +259,7 @@ new #[Layout('layouts.app')] class extends Component {
             @foreach ($pageTables as $pt => $config)
                 @if ($metric = $insights->get($pt))
                     @php $scrollable = count($metric->data) > 20; @endphp
-                    <x-ui.card @class(['overflow-hidden p-0! flex flex-col', 'max-h-200' => $scrollable])>
+                    <x-ui.card size="full" @class(['overflow-hidden p-0! flex flex-col', 'max-h-200' => $scrollable])>
                         <div class="flex items-center gap-2 px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 shrink-0">
                             <x-ui.icon name="{{ $config['icon'] }}" class="size-5 text-{{ $config['color'] }}-500" />
                             <x-ui.heading level="h3" size="sm">{{ $config['label'] }}</x-ui.heading>

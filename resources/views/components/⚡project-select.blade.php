@@ -84,7 +84,7 @@ new class extends Component {
         if (stored) $wire.initFromStorage(parseInt(stored));
     "
 >
-    <x-ui.select placeholder="Select a project..." wire:model.live="selectedProject">
+    <x-ui.select placeholder="Select a project..." searchable wire:model.live="selectedProject">
         @foreach ($this->projects as $customerName => $customerProjects)
             <x-ui.select.group :label="$customerName">
                 @foreach ($customerProjects as $project)
