@@ -52,7 +52,7 @@
                             <x-ui.dropdown.separator />
 
                             <div>
-                                <x-ui.dropdown.item icon="gear" disabled>
+                                <x-ui.dropdown.item icon="gear" href="/settings">
                                     Settings
                                 </x-ui.dropdown.item>
                             </div>
@@ -73,19 +73,15 @@
             <x-ui.sidebar>
                 <x-ui.navlist>
                     <x-ui.navlist.group label="General">
-                        {{-- <x-ui.navlist.item disabled label="Dashboard" icon="house" href="/" /> --}}
                         <x-ui.navlist.item label="Projects" icon="check-square" href="/projects" />
                     </x-ui.navlist.group>
                     <x-ui.navlist.group label="Project">
-                        {{-- <x-ui.navlist.item disabled label="Overview" icon="chart-bar" href="/dashboard" /> --}}
                         <x-ui.navlist.group label="Clarity" variant="compact">
                             <x-ui.navlist.item label="Snapshot" icon="camera" href="/clarity/snapshot"
                                 :active="request()->is('clarity/snapshot')" />
                             <x-ui.navlist.item label="Trends" icon="chart-line-up" href="/clarity/trends"
                                 :active="request()->is('clarity/trends')" />
                         </x-ui.navlist.group>
-                        {{-- <x-ui.navlist.item disabled label="ContentSquare" icon="cube" /> --}}
-                        {{-- <x-ui.navlist.item disabled label="Notes" icon="note"/> --}}
                         <x-ui.navlist.group label="Reports" variant="compact">
                             <x-ui.navlist.item label="New Report" icon="plus-circle" href="/ai-reports"
                                 :active="request()->is('ai-reports')" />
@@ -96,7 +92,10 @@
                     </x-ui.navlist.group>
                     <x-ui.navlist.group label="System">
                         <x-ui.navlist.item label="Users | Customers" icon="users" href="/users" />
-                        <x-ui.navlist.item disabled label="Settings" icon="gear" href="/settings" />
+                        <x-ui.navlist.group label="Settings" icon="gear" variant="compact" href="/settings" :active="request()->is('settings')">
+                            <x-ui.navlist.item label="Presets" icon="tag" href="/settings/presets"
+                                :active="request()->is('settings/presets')" />
+                        </x-ui.navlist.group>
                     </x-ui.navlist.group>
                 </x-ui.navlist>
             </x-ui.sidebar>

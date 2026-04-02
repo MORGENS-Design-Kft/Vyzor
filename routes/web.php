@@ -10,7 +10,7 @@ Route::get('/', function () {
 
     return Auth::user()->isCustomer()
         ? redirect()->route('customer.dashboard')
-        : redirect()->route('dashboard');  // admin also goes here
+        : redirect()->route('clarity.snapshot');  // admin also goes here
 });
 
 Route::middleware('guest')->group(function () {
@@ -29,6 +29,7 @@ Route::middleware('auth')->group(function () {
         Route::livewire('/reports', 'pages::reports')->name('reports');
         Route::livewire('/reports/{report}', 'pages::report-view')->name('report.view');
         Route::livewire('/users', 'pages::users')->name('users');
+        Route::livewire('/settings/presets', 'pages::settings.presets')->name('preset.settings');
         Route::livewire('/register', 'pages::auth.register')->name('register');
     });
 

@@ -3,11 +3,9 @@
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Validate;
 use App\Models\Report;
+use App\Models\LLMContextPreset;
 use App\ReportStatusEnum;
-use App\ReportPresetEnum;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 new #[Layout('layouts.app')] class extends Component {
@@ -36,31 +34,17 @@ new #[Layout('layouts.app')] class extends Component {
     #[On('current-project-changed')]
     public function onProjectChanged() {}
 
-    public function getPresetsProperty(): array
+    public function getPresetsProperty()
     {
-        $presets = [];
-        foreach (ReportPresetEnum::cases() as $enum) {
-            $path = resource_path("presets/{$enum->value}.md");
-            if (!File::exists($path)) {
-                continue;
-            }
-            $presets[] = [
-                'slug' => $enum->value,
-                'title' => $enum->label(),
-                'icon' => $enum->icon(),
-                'color' => $enum->color(),
-                'file' => $enum->value . '.md',
-            ];
-        }
-        return $presets;
+        return LLMContextPreset::active()->ordered()->get();
     }
 
     public function previewPreset(string $slug): void
     {
-        $path = resource_path("presets/{$slug}.md");
-        if (File::exists($path)) {
-            $this->presetPreviewContent = File::get($path);
-            $this->presetPreviewName = ReportPresetEnum::tryFrom($slug)?->label() ?? Str::title(str_replace('-', ' ', $slug));
+        $preset = LLMContextPreset::where('slug', $slug)->first();
+        if ($preset) {
+            $this->presetPreviewContent = $preset->context;
+            $this->presetPreviewName = $preset->name;
             $this->showPresetPreview = true;
         }
     }
@@ -85,8 +69,8 @@ new #[Layout('layouts.app')] class extends Component {
             return;
         }
 
-        $presetData = collect($this->presets)->firstWhere('slug', $this->preset);
-        $presetTitle = $presetData['title'] ?? Str::title(str_replace('-', ' ', $this->preset));
+        $presetModel = LLMContextPreset::where('slug', $this->preset)->first();
+        $presetTitle = $presetModel?->name ?? Str::title(str_replace('-', ' ', $this->preset));
 
         Report::create([
             'project_id' => $projectId,
@@ -160,9 +144,14 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <div class="p-6 space-y-6">
-    <div>
-        <x-ui.heading level="h1" size="xl">Reports</x-ui.heading>
-        <x-ui.description class="mt-1">Request AI-generated reports or create your own notes for the current project.</x-ui.description>
+    <div class="flex items-center justify-between">
+        <div>
+            <x-ui.heading level="h1" size="xl">Reports</x-ui.heading>
+            <x-ui.description class="mt-1">Request AI-generated reports or create your own notes for the current project.</x-ui.description>
+        </div>
+        <x-ui.button variant="outline" color="neutral" size="sm" icon="gear" href="/settings">
+            Manage Presets
+        </x-ui.button>
     </div>
 
     @if (session('success'))
@@ -223,27 +212,27 @@ new #[Layout('layouts.app')] class extends Component {
                                 @foreach ($this->presets as $presetOption)
                                     <label
                                         class="relative flex items-center gap-3 p-3 rounded-box border border-black/10 dark:border-white/10 cursor-pointer transition-all hover:border-black/20 dark:hover:border-white/20"
-                                        @if ($preset === $presetOption['slug'])
-                                            style="border-color: {{ $presetOption['color'] }}; background-color: {{ $presetOption['color'] }}10; box-shadow: 0 0 0 1px {{ $presetOption['color'] }}80"
+                                        @if ($preset === $presetOption->slug)
+                                            style="border-color: {{ $presetOption->label_color }}; background-color: {{ $presetOption->label_color }}10; box-shadow: 0 0 0 1px {{ $presetOption->label_color }}80"
                                         @endif
                                     >
-                                        <input type="radio" wire:model.live="preset" value="{{ $presetOption['slug'] }}" class="sr-only" />
+                                        <input type="radio" wire:model.live="preset" value="{{ $presetOption->slug }}" class="sr-only" />
                                         <div
                                             class="shrink-0 flex items-center justify-center size-9 rounded-field"
-                                            style="background-color: {{ $presetOption['color'] }}15; color: {{ $presetOption['color'] }}"
+                                            style="background-color: {{ $presetOption->label_color }}15; color: {{ $presetOption->label_color }}"
                                         >
-                                            <x-ui.icon :name="$presetOption['icon']" class="size-5" />
+                                            <x-ui.icon :name="$presetOption->icon" class="size-5" />
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <span class="block text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $presetOption['title'] }}</span>
-                                            <span class="block text-xs text-neutral-400 mt-0.5">{{ $presetOption['file'] }}</span>
+                                            <span class="block text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $presetOption->name }}</span>
+                                            <span class="block text-xs text-neutral-400 mt-0.5">{{ $presetOption->description }}</span>
                                         </div>
-                                        @if ($preset === $presetOption['slug'])
+                                        @if ($preset === $presetOption->slug)
                                             <button
                                                 type="button"
-                                                wire:click="previewPreset('{{ $presetOption['slug'] }}')"
+                                                wire:click="previewPreset('{{ $presetOption->slug }}')"
                                                 class="shrink-0 text-neutral-400 hover:opacity-80 transition-colors"
-                                                style="color: {{ $presetOption['color'] }}"
+                                                style="color: {{ $presetOption->label_color }}"
                                                 title="Preview preset"
                                             >
                                                 <x-ui.icon name="eye" class="size-4" />
@@ -389,11 +378,10 @@ new #[Layout('layouts.app')] class extends Component {
                                     </div>
                                     <div class="flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-400">
                                         @if ($report->preset)
-                                            @php $presetEnum = ReportPresetEnum::tryFrom($report->preset) @endphp
                                             <span class="inline-flex items-center gap-1">
-                                                @if ($presetEnum)
-                                                    <x-ui.icon :name="$presetEnum->icon()" class="size-3" style="color: {{ $presetEnum->color() }}" />
-                                                    {{ $presetEnum->label() }}
+                                                @if ($report->contextPreset)
+                                                    <x-ui.icon :name="$report->contextPreset->icon" class="size-3" style="color: {{ $report->contextPreset->label_color }}" />
+                                                    {{ $report->contextPreset->name }}
                                                 @else
                                                     <x-ui.icon name="tag" class="size-3" />
                                                     {{ Str::title(str_replace('-', ' ', $report->preset)) }}

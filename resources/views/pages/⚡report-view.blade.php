@@ -83,11 +83,10 @@ new #[Layout('layouts.app')] class extends Component {
                 <div class="flex flex-wrap items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                     <x-ui.badge size="sm" color="{{ $report->status->color() }}">{{ $report->status->label() }}</x-ui.badge>
                     @if ($report->preset)
-                        @php $presetEnum = App\ReportPresetEnum::tryFrom($report->preset) @endphp
                         <span class="inline-flex items-center gap-1">
-                            @if ($presetEnum)
-                                <x-ui.icon :name="$presetEnum->icon()" class="size-3.5" style="color: {{ $presetEnum->color() }}" />
-                                {{ $presetEnum->label() }}
+                            @if ($report->contextPreset)
+                                <x-ui.icon :name="$report->contextPreset->icon" class="size-3.5" style="color: {{ $report->contextPreset->label_color }}" />
+                                {{ $report->contextPreset->name }}
                             @else
                                 <x-ui.icon name="tag" class="size-3.5" />
                                 {{ \Illuminate\Support\Str::title(str_replace('-', ' ', $report->preset)) }}

@@ -47,6 +47,11 @@ class Report extends Model
         return $query->where('project_id', $projectId);
     }
 
+    public function contextPreset(): BelongsTo
+    {
+        return $this->belongsTo(LLMContextPreset::class, 'preset', 'slug');
+    }
+
     public function scopeAiReports($query)
     {
         return $query->where('is_ai', true);

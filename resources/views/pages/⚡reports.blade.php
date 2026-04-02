@@ -5,8 +5,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Models\Report;
+use App\Models\LLMContextPreset;
 use App\ReportStatusEnum;
-use App\ReportPresetEnum;
 use Illuminate\Support\Str;
 
 new #[Layout('layouts.app')] class extends Component {
@@ -59,13 +59,9 @@ new #[Layout('layouts.app')] class extends Component {
         }
     }
 
-    public function getPresetsProperty(): array
+    public function getPresetsProperty()
     {
-        $presets = [];
-        foreach (ReportPresetEnum::cases() as $enum) {
-            $presets[$enum->value] = $enum->label();
-        }
-        return $presets;
+        return LLMContextPreset::active()->ordered()->pluck('name', 'slug');
     }
 
     public function with(): array
@@ -241,11 +237,10 @@ new #[Layout('layouts.app')] class extends Component {
 
                                 <div class="flex flex-wrap items-center gap-3 text-xs text-neutral-500 dark:text-neutral-400">
                                     @if ($report->preset)
-                                        @php $presetEnum = App\ReportPresetEnum::tryFrom($report->preset) @endphp
                                         <span class="inline-flex items-center gap-1">
-                                            @if ($presetEnum)
-                                                <x-ui.icon :name="$presetEnum->icon()" class="size-3" style="color: {{ $presetEnum->color() }}" />
-                                                {{ $presetEnum->label() }}
+                                            @if ($report->contextPreset)
+                                                <x-ui.icon :name="$report->contextPreset->icon" class="size-3" style="color: {{ $report->contextPreset->label_color }}" />
+                                                {{ $report->contextPreset->name }}
                                             @else
                                                 <x-ui.icon name="tag" class="size-3" />
                                                 {{ Str::title(str_replace('-', ' ', $report->preset)) }}
