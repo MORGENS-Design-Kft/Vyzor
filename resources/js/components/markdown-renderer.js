@@ -19,15 +19,6 @@ Alpine.data("markdownRenderer", () => ({
     rendered: "",
 
     init() {
-        this.render();
-
-        // Re-render after Livewire updates (e.g. save/cancel editing)
-        Livewire.hook("morph.updated", () => {
-            this.$nextTick(() => this.render());
-        });
-    },
-
-    render() {
         const source = this.$refs.source?.textContent || "";
         this.rendered = marked.parse(source);
     },

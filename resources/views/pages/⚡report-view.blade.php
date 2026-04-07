@@ -190,7 +190,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-ui.error name="editContent" />
             </x-ui.field>
         @elseif ($report->content)
-            <div x-data="markdownRenderer" class="prose prose-sm dark:prose-invert max-w-none">
+            <div wire:key="markdown-{{ $report->id }}-{{ $report->updated_at->timestamp }}" x-data="markdownRenderer" class="prose prose-sm dark:prose-invert max-w-none">
                 <div x-ref="source" class="hidden">{{ $report->content }}</div>
                 <div x-html="rendered"></div>
             </div>
