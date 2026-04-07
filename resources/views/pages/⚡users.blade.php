@@ -78,6 +78,12 @@ new #[Layout('layouts.app')] class extends Component {
         $this->resetValidation();
     }
 
+    public function deleteUser(int $userId): void
+    {
+        $user = User::findOrFail($userId);
+        $user->delete();
+    }
+
     public function with(): array
     {
         return [
@@ -142,10 +148,23 @@ new #[Layout('layouts.app')] class extends Component {
                                 <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ $user->email }}</p>
                             </div>
                         </div>
-                        <x-ui.button size="xs" variant="ghost" icon="pencil"
-                            wire:click="startEditing({{ $user->id }})">Edit</x-ui.button>
+                        <div class="flex shrink-0 gap-1">
+                            <x-ui.button size="xs" variant="ghost" icon="pencil"
+                                wire:click="startEditing({{ $user->id }})">Edit</x-ui.button>
+                            <x-ui.modal.trigger :id="'delete-user-' . $user->id">
+                                <x-ui.button size="xs" variant="ghost" icon="trash" color="red">Delete</x-ui.button>
+                            </x-ui.modal.trigger>
+                        </div>
                     @endif
                 </div>
+
+                <x-ui.modal :id="'delete-user-' . $user->id" title="Delete User" size="sm" centered>
+                    <x-ui.text>Are you sure you want to delete <strong>{{ $user->name }}</strong>?</x-ui.text>
+                    <x-slot:footer>
+                        <x-ui.button variant="ghost" x-on:click="isOpen = false">Cancel</x-ui.button>
+                        <x-ui.button variant="danger" wire:click="deleteUser({{ $user->id }})" x-on:click="isOpen = false">Delete</x-ui.button>
+                    </x-slot:footer>
+                </x-ui.modal>
             @empty
                 <x-ui.empty>
                     <x-ui.empty.contents>
@@ -214,10 +233,23 @@ new #[Layout('layouts.app')] class extends Component {
                                 @endif
                             </div>
                         </div>
-                        <x-ui.button size="xs" variant="ghost" icon="pencil"
-                            wire:click="startEditing({{ $customer->id }})">Edit</x-ui.button>
+                        <div class="flex shrink-0 gap-1">
+                            <x-ui.button size="xs" variant="ghost" icon="pencil"
+                                wire:click="startEditing({{ $customer->id }})">Edit</x-ui.button>
+                            <x-ui.modal.trigger :id="'delete-customer-' . $customer->id">
+                                <x-ui.button size="xs" variant="ghost" icon="trash" color="red">Delete</x-ui.button>
+                            </x-ui.modal.trigger>
+                        </div>
                     @endif
                 </div>
+
+                <x-ui.modal :id="'delete-customer-' . $customer->id" title="Delete Customer" size="sm" centered>
+                    <x-ui.text>Are you sure you want to delete <strong>{{ $customer->customerProfile?->company_name ?? $customer->name }}</strong>?</x-ui.text>
+                    <x-slot:footer>
+                        <x-ui.button variant="ghost" x-on:click="isOpen = false">Cancel</x-ui.button>
+                        <x-ui.button variant="danger" wire:click="deleteUser({{ $customer->id }})" x-on:click="isOpen = false">Delete</x-ui.button>
+                    </x-slot:footer>
+                </x-ui.modal>
             @empty
                 <x-ui.empty>
                     <x-ui.empty.contents>

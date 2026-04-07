@@ -156,6 +156,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         </x-ui.button>
                                     </x-ui.modal.trigger>
                                     <x-ui.modal :id="'delete-project-' . $project->id" title="Delete Project" size="sm" centered>
+                                        <x-ui.text>Are you sure you want to delete <strong>{{ $project->name }}</strong>?</x-ui.text>
                                         <x-slot:footer>
                                             <x-ui.button variant="ghost" x-on:click="isOpen = false">Cancel</x-ui.button>
                                             <x-ui.button variant="danger" wire:click="deleteProject({{ $project->id }})" x-on:click="isOpen = false">Delete</x-ui.button>

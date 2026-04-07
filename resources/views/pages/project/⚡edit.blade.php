@@ -3,6 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
+use Livewire\Attributes\On;
 use App\Models\User;
 use App\Models\Project;
 use App\ProjectStatusEnum;
@@ -51,6 +52,13 @@ new #[Layout('layouts.app')] class extends Component {
         }
     }
 
+    #[On('customer-created')]
+    public function onCustomerCreated(int $id): void
+    {
+        $this->customer_id = (string) $id;
+        $this->dispatch('close-modal', id: 'create-customer-modal');
+    }
+
     public function updateProject(): void
     {
         $this->updatedDomain();
@@ -71,7 +79,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'customers' => User::where('type', \App\UserTypeEnum::CUSTOMER)->get(),
+            'customers' => User::where('type', UserTypeEnum::CUSTOMER)->get(),
             'statuses' => ProjectStatusEnum::cases(),
         ];
     }
@@ -96,12 +104,19 @@ new #[Layout('layouts.app')] class extends Component {
 
                 <x-ui.field required>
                     <x-ui.label>Customer</x-ui.label>
-                    <x-ui.select wire:model="customer_id" placeholder="Choose a customer..." searchable>
-                        @foreach ($customers as $customer)
-                            <x-ui.select.option :value="$customer->id">{{ $customer->name }}</x-ui.select.option>
-                        @endforeach
-                    </x-ui.select>
-
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1" wire:key="customer-select-{{ $customer_id }}">
+                            <x-ui.select wire:model="customer_id" placeholder="Choose a customer..." searchable>
+                                @foreach ($customers as $customer)
+                                    <x-ui.select.option :value="$customer->id">{{ $customer->name }}</x-ui.select.option>
+                                @endforeach
+                            </x-ui.select>
+                        </div>
+                        <x-ui.modal.trigger id="create-customer-modal">
+                            <x-ui.button type="button" variant="outline" icon="plus" size="sm">New</x-ui.button>
+                        </x-ui.modal.trigger>
+                    </div>
+                    <x-ui.error name="customer_id" />
                 </x-ui.field>
 
                 <x-ui.field required>
@@ -136,4 +151,8 @@ new #[Layout('layouts.app')] class extends Component {
             </x-ui.fieldset>
         </form>
     </div>
+
+    <x-ui.modal id="create-customer-modal" title="New Customer" width="md">
+        <livewire:customer-form />
+    </x-ui.modal>
 </div>
