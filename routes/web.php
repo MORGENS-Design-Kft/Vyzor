@@ -28,8 +28,10 @@ Route::middleware('auth')->group(function () {
         Route::livewire('/ai-reports', 'pages::ai-reports')->name('ai-reports');
         Route::livewire('/reports', 'pages::reports')->name('reports');
         Route::livewire('/reports/{report}', 'pages::report-view')->name('report.view');
+        Route::livewire('/heatmaps', 'pages::heatmaps')->name('heatmaps');
+        Route::livewire('/heatmaps/upload', 'pages::heatmap-upload')->name('heatmaps.upload');
         Route::livewire('/users', 'pages::users')->name('users');
-        Route::livewire('/settings/presets', 'pages::settings.presets')->name('preset.settings');
+        Route::livewire('/settings/contexts', 'pages::settings.presets')->name('preset.settings');
         Route::livewire('/register', 'pages::auth.register')->name('register');
     });
 

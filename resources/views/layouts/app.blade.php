@@ -7,6 +7,9 @@
 
     <title>{{ $title ?? config('app.name') }}</title>
 
+    <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+    <link rel="alternate icon" href="/favicon.ico">
+
     @livewireScriptConfig
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -88,13 +91,19 @@
                             <x-ui.navlist.item label="All Reports" icon="book-bookmark" href="/reports"
                                 :active="request()->is('reports') || request()->is('reports/*')" />
                         </x-ui.navlist.group>
+                        <x-ui.navlist.group label="Heatmaps" variant="compact">
+                            <x-ui.navlist.item label="Upload" icon="upload-simple" href="/heatmaps/upload"
+                                :active="request()->is('heatmaps/upload')" />
+                            <x-ui.navlist.item label="All Heatmaps" icon="fire" href="/heatmaps"
+                                :active="request()->is('heatmaps') && !request()->is('heatmaps/*')" />
+                        </x-ui.navlist.group>
                         <x-ui.navlist.item disabled label="Pezentations" icon="projector-screen-chart" />
                     </x-ui.navlist.group>
                     <x-ui.navlist.group label="System">
                         <x-ui.navlist.item label="Users | Customers" icon="users" href="/users" />
                         <x-ui.navlist.group label="Settings" icon="gear" variant="compact" href="/settings" :active="request()->is('settings')">
-                            <x-ui.navlist.item label="Presets" icon="tag" href="/settings/presets"
-                                :active="request()->is('settings/presets')" />
+                            <x-ui.navlist.item label="Contexts" icon="tag" href="/settings/contexts"
+                                :active="request()->is('settings/contexts')" />
                         </x-ui.navlist.group>
                     </x-ui.navlist.group>
                 </x-ui.navlist>

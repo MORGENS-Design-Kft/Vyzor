@@ -3,7 +3,8 @@
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
-use App\Models\LLMContextPreset;
+use App\AiContextType;
+use App\Models\AiContext;
 
 new #[Layout('layouts.app')] class extends Component {
 
@@ -11,6 +12,8 @@ new #[Layout('layouts.app')] class extends Component {
     public ?int $editingId = null;
     public string $formName = '';
     public string $formDescription = '';
+    public string $formType = 'preset';
+    public array $formModels = ['all'];
     public string $formLabelColor = '#3b82f6';
     public string $formIcon = 'file-text';
     public string $formContext = '';
@@ -18,6 +21,7 @@ new #[Layout('layouts.app')] class extends Component {
     public bool $formIsActive = true;
 
     public bool $showForm = false;
+    public string $filterType = '';
 
     public function openCreateForm(): void
     {
@@ -27,15 +31,17 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function editPreset(int $id): void
     {
-        $preset = LLMContextPreset::findOrFail($id);
-        $this->editingId = $preset->id;
-        $this->formName = $preset->name;
-        $this->formDescription = $preset->description ?? '';
-        $this->formLabelColor = $preset->label_color;
-        $this->formIcon = $preset->icon;
-        $this->formContext = $preset->context;
-        $this->formSortOrder = $preset->sort_order;
-        $this->formIsActive = $preset->is_active;
+        $context = AiContext::findOrFail($id);
+        $this->editingId = $context->id;
+        $this->formName = $context->name;
+        $this->formDescription = $context->description ?? '';
+        $this->formType = $context->type->value;
+        $this->formModels = $context->models ?? ['all'];
+        $this->formLabelColor = $context->label_color ?? '#3b82f6';
+        $this->formIcon = $context->icon ?? 'file-text';
+        $this->formContext = $context->context;
+        $this->formSortOrder = $context->sort_order;
+        $this->formIsActive = $context->is_active;
         $this->showForm = true;
     }
 
@@ -44,6 +50,8 @@ new #[Layout('layouts.app')] class extends Component {
         $this->validate([
             'formName' => 'required|string|max:255',
             'formDescription' => 'nullable|string|max:500',
+            'formType' => 'required|string|in:preset,system,instruction',
+            'formModels' => 'required|array|min:1',
             'formLabelColor' => 'required|string|max:7',
             'formIcon' => 'required|string|max:100',
             'formContext' => 'required|string',
@@ -53,6 +61,8 @@ new #[Layout('layouts.app')] class extends Component {
         $data = [
             'name' => $this->formName,
             'description' => $this->formDescription ?: null,
+            'type' => $this->formType,
+            'models' => $this->formModels,
             'label_color' => $this->formLabelColor,
             'icon' => $this->formIcon,
             'context' => $this->formContext,
@@ -61,11 +71,11 @@ new #[Layout('layouts.app')] class extends Component {
         ];
 
         if ($this->editingId) {
-            LLMContextPreset::findOrFail($this->editingId)->update($data);
-            session()->flash('success', 'Preset updated successfully.');
+            AiContext::findOrFail($this->editingId)->update($data);
+            session()->flash('success', 'Context updated successfully.');
         } else {
-            LLMContextPreset::create($data);
-            session()->flash('success', 'Preset created successfully.');
+            AiContext::create($data);
+            session()->flash('success', 'Context created successfully.');
         }
 
         $this->resetForm();
@@ -73,14 +83,14 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function toggleActive(int $id): void
     {
-        $preset = LLMContextPreset::findOrFail($id);
-        $preset->update(['is_active' => !$preset->is_active]);
+        $context = AiContext::findOrFail($id);
+        $context->update(['is_active' => !$context->is_active]);
     }
 
     public function deletePreset(int $id): void
     {
-        LLMContextPreset::findOrFail($id)->delete();
-        session()->flash('success', 'Preset deleted.');
+        AiContext::findOrFail($id)->delete();
+        session()->flash('success', 'Context deleted.');
     }
 
     public function cancelForm(): void
@@ -88,11 +98,33 @@ new #[Layout('layouts.app')] class extends Component {
         $this->resetForm();
     }
 
+    public function toggleModel(string $model): void
+    {
+        if ($model === 'all') {
+            $this->formModels = ['all'];
+            return;
+        }
+
+        $this->formModels = array_values(array_diff($this->formModels, ['all']));
+
+        if (in_array($model, $this->formModels)) {
+            $this->formModels = array_values(array_diff($this->formModels, [$model]));
+        } else {
+            $this->formModels[] = $model;
+        }
+
+        if (empty($this->formModels)) {
+            $this->formModels = ['all'];
+        }
+    }
+
     private function resetForm(): void
     {
         $this->editingId = null;
         $this->formName = '';
         $this->formDescription = '';
+        $this->formType = 'preset';
+        $this->formModels = ['all'];
         $this->formLabelColor = '#3b82f6';
         $this->formIcon = 'file-text';
         $this->formContext = '';
@@ -104,18 +136,25 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function with(): array
     {
+        $query = AiContext::ordered();
+
+        if ($this->filterType) {
+            $query->ofType(AiContextType::from($this->filterType));
+        }
+
         return [
-            'presets' => LLMContextPreset::ordered()->get(),
+            'contexts' => $query->get(),
+            'types' => AiContextType::cases(),
+            'providers' => collect(config('ai.providers', []))
+                ->filter(fn($provider) => !empty($provider['key']))
+                ->keys()
+                ->all(),
         ];
     }
 };
 ?>
 
 <div class="p-6 space-y-6">
-    <div>
-        <x-ui.heading level="h1" size="xl">Settings</x-ui.heading>
-        <x-ui.description class="mt-1">Manage application settings and LLM context presets.</x-ui.description>
-    </div>
 
     @if (session('success'))
         <div class="rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-4">
@@ -126,26 +165,46 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     @endif
 
-    {{-- Preset Manager Section --}}
+    {{-- Context Manager Section --}}
     <div>
         <div class="flex items-center justify-between mb-4">
             <div>
-                <x-ui.heading level="h2" size="lg">LLM Context Presets</x-ui.heading>
-                <x-ui.description class="mt-1">Configure presets that define what the AI analyses in reports.</x-ui.description>
+                <x-ui.heading level="h2" size="lg">AI Contexts</x-ui.heading>
+                <x-ui.description class="mt-1">Configure the contexts and instructions that shape AI behaviour in reports.</x-ui.description>
             </div>
             @if (!$showForm)
                 <x-ui.button color="blue" icon="plus" wire:click="openCreateForm">
-                    New Preset
+                    New Context
                 </x-ui.button>
             @endif
         </div>
+
+        {{-- Type Filter --}}
+        @if (!$showForm)
+            <div class="flex gap-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg p-1 w-fit mb-4">
+                <button
+                    wire:click="$set('filterType', '')"
+                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors {{ $filterType === '' ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300' }}"
+                >
+                    All
+                </button>
+                @foreach ($types as $type)
+                    <button
+                        wire:click="$set('filterType', '{{ $type->value }}')"
+                        class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors {{ $filterType === $type->value ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300' }}"
+                    >
+                        {{ $type->label() }}
+                    </button>
+                @endforeach
+            </div>
+        @endif
 
         {{-- Create / Edit Form --}}
         @if ($showForm)
             <x-ui.card size="full" class="mb-6">
                 <div class="flex items-center gap-2 mb-5">
                     <x-ui.icon name="{{ $editingId ? 'pencil-simple' : 'plus-circle' }}" class="size-5 text-blue-500" />
-                    <x-ui.heading level="h3" size="md">{{ $editingId ? 'Edit Preset' : 'New Preset' }}</x-ui.heading>
+                    <x-ui.heading level="h3" size="md">{{ $editingId ? 'Edit Context' : 'New Context' }}</x-ui.heading>
                 </div>
 
                 <form wire:submit="savePreset" class="space-y-5">
@@ -160,8 +219,69 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <x-ui.field>
                                 <x-ui.label>Description</x-ui.label>
-                                <x-ui.input wire:model="formDescription" placeholder="Short description of what this preset analyses..." :invalid="$errors->has('formDescription')" />
+                                <x-ui.input wire:model="formDescription" placeholder="Short description of what this context does..." :invalid="$errors->has('formDescription')" />
                                 <x-ui.error name="formDescription" />
+                            </x-ui.field>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <x-ui.field required>
+                                    <x-ui.label>Type</x-ui.label>
+                                    <select
+                                        wire:model.live="formType"
+                                        class="w-full rounded-box border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900 px-3 py-2 text-sm text-neutral-800 dark:text-neutral-300 focus:ring-2 focus:ring-neutral-900/15 dark:focus:ring-neutral-100/15 focus:outline-none shadow-xs"
+                                    >
+                                        @foreach ($types as $type)
+                                            <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-ui.description class="mt-1">
+                                        @if ($formType === 'preset')
+                                            Selectable report templates shown when creating reports.
+                                        @elseif ($formType === 'system')
+                                            Core instructions that define the AI agent's role and behaviour.
+                                        @else
+                                            Additional instructions injected based on report conditions.
+                                        @endif
+                                    </x-ui.description>
+                                </x-ui.field>
+
+                                <x-ui.field>
+                                    <x-ui.label>Sort Order</x-ui.label>
+                                    <x-ui.input type="number" wire:model="formSortOrder" min="0" />
+                                </x-ui.field>
+                            </div>
+
+                            {{-- Models --}}
+                            <x-ui.field required>
+                                <x-ui.label>AI Models</x-ui.label>
+                                <x-ui.description class="mb-2">Which AI providers should use this context.</x-ui.description>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        wire:click="toggleModel('all')"
+                                        @class([
+                                            'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                                            'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300' => in_array('all', $formModels),
+                                            'border-black/10 dark:border-white/15 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300' => !in_array('all', $formModels),
+                                        ])
+                                    >
+                                        All Models
+                                    </button>
+                                    @foreach ($providers as $provider)
+                                        <button
+                                            type="button"
+                                            wire:click="toggleModel('{{ $provider }}')"
+                                            @class([
+                                                'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                                                'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300' => !in_array('all', $formModels) && in_array($provider, $formModels),
+                                                'border-black/10 dark:border-white/15 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300' => in_array('all', $formModels) || !in_array($provider, $formModels),
+                                            ])
+                                        >
+                                            {{ ucfirst($provider) }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                                <x-ui.error name="formModels" />
                             </x-ui.field>
 
                             <div class="grid grid-cols-3 gap-4">
@@ -182,11 +302,6 @@ new #[Layout('layouts.app')] class extends Component {
                                     <x-ui.input wire:model="formIcon" placeholder="e.g. chart-line-up" :invalid="$errors->has('formIcon')" />
                                     <x-ui.error name="formIcon" />
                                 </x-ui.field>
-
-                                <x-ui.field>
-                                    <x-ui.label>Sort Order</x-ui.label>
-                                    <x-ui.input type="number" wire:model="formSortOrder" min="0" />
-                                </x-ui.field>
                             </div>
 
                             {{-- Preview card --}}
@@ -203,7 +318,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         <x-ui.icon :name="$formIcon" class="size-5" />
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <span class="block text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $formName ?: 'Preset Name' }}</span>
+                                        <span class="block text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $formName ?: 'Context Name' }}</span>
                                         <span class="block text-xs text-neutral-400 mt-0.5">{{ $formDescription ?: 'Description goes here...' }}</span>
                                     </div>
                                 </div>
@@ -213,7 +328,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <x-ui.checkbox wire:model="formIsActive" />
                                     <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Active</span>
-                                    <span class="text-xs text-neutral-400">(inactive presets won't appear when creating reports)</span>
+                                    <span class="text-xs text-neutral-400">(inactive contexts won't be used in reports)</span>
                                 </label>
                             </x-ui.field>
                         </div>
@@ -222,7 +337,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <div>
                             <x-ui.field required class="h-full flex! flex-col!">
                                 <x-ui.label>Context / Prompt</x-ui.label>
-                                <x-ui.description class="mb-2">The instructions sent to the AI when this preset is selected. Supports markdown.</x-ui.description>
+                                <x-ui.description class="mb-2">The instructions sent to the AI. Supports markdown.</x-ui.description>
                                 <textarea
                                     wire:model="formContext"
                                     placeholder="# Report Title&#10;&#10;Describe what the AI should analyse...&#10;&#10;## Focus Areas&#10;- Area 1&#10;- Area 2&#10;&#10;## Expected Output&#10;Describe the expected format..."
@@ -242,52 +357,57 @@ new #[Layout('layouts.app')] class extends Component {
                             Cancel
                         </x-ui.button>
                         <x-ui.button type="submit" color="blue" icon="floppy-disk">
-                            {{ $editingId ? 'Update Preset' : 'Create Preset' }}
+                            {{ $editingId ? 'Update Context' : 'Create Context' }}
                         </x-ui.button>
                     </div>
                 </form>
             </x-ui.card>
         @endif
 
-        {{-- Presets List --}}
-        @if ($presets->isEmpty())
+        {{-- Contexts List --}}
+        @if ($contexts->isEmpty())
             <x-ui.card>
                 <x-ui.empty>
                     <x-ui.empty.contents>
                         <x-ui.icon name="file-text" class="size-10 text-neutral-300 dark:text-neutral-600" />
-                        <x-ui.text>No presets yet. Create your first one to get started.</x-ui.text>
+                        <x-ui.text>No contexts yet. Create your first one to get started.</x-ui.text>
                         <x-ui.button variant="outline" color="neutral" wire:click="openCreateForm" class="mt-2" icon="plus">
-                            Create Preset
+                            Create Context
                         </x-ui.button>
                     </x-ui.empty.contents>
                 </x-ui.empty>
             </x-ui.card>
         @else
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                @foreach ($presets as $preset)
-                    <x-ui.card size="full" @class(['opacity-50' => !$preset->is_active])>
+                @foreach ($contexts as $context)
+                    <x-ui.card size="full" @class(['opacity-50' => !$context->is_active])>
                         <div class="flex items-start gap-3">
                             <div
                                 class="shrink-0 flex items-center justify-center size-10 rounded-field mt-0.5"
-                                style="background-color: {{ $preset->label_color }}15; color: {{ $preset->label_color }}"
+                                style="background-color: {{ $context->label_color ?? '#6b7280' }}15; color: {{ $context->label_color ?? '#6b7280' }}"
                             >
-                                <x-ui.icon :name="$preset->icon" class="size-5" />
+                                <x-ui.icon :name="$context->icon ?? 'file-text'" class="size-5" />
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{{ $preset->name }}</span>
-                                    @if (!$preset->is_active)
+                                    <span class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{{ $context->name }}</span>
+                                    <x-ui.badge size="sm" color="{{ $context->type->color() }}">{{ $context->type->label() }}</x-ui.badge>
+                                    @if (!$context->is_active)
                                         <x-ui.badge size="sm" color="neutral">Inactive</x-ui.badge>
                                     @endif
                                 </div>
-                                @if ($preset->description)
-                                    <x-ui.description class="mt-0.5 line-clamp-2">{{ $preset->description }}</x-ui.description>
+                                @if ($context->description)
+                                    <x-ui.description class="mt-0.5 line-clamp-2">{{ $context->description }}</x-ui.description>
                                 @endif
                                 <div class="flex items-center gap-1 mt-2 text-xs text-neutral-400">
                                     <x-ui.icon name="sort-ascending" class="size-3" />
-                                    <span>{{ $preset->sort_order }}</span>
+                                    <span>{{ $context->sort_order }}</span>
                                     <span class="mx-1">-</span>
-                                    <span class="font-mono">{{ $preset->slug }}</span>
+                                    <span class="font-mono">{{ $context->slug }}</span>
+                                    @if ($context->models && !in_array('all', $context->models))
+                                        <span class="mx-1">-</span>
+                                        <span>{{ implode(', ', $context->models) }}</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -296,22 +416,22 @@ new #[Layout('layouts.app')] class extends Component {
 
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1">
-                                <x-ui.button size="xs" variant="outline" color="neutral" icon="pencil-simple" wire:click="editPreset({{ $preset->id }})">
+                                <x-ui.button size="xs" variant="outline" color="neutral" icon="pencil-simple" wire:click="editPreset({{ $context->id }})">
                                     Edit
                                 </x-ui.button>
                                 <x-ui.button
                                     size="xs"
                                     variant="outline"
-                                    :color="$preset->is_active ? 'neutral' : 'blue'"
-                                    :icon="$preset->is_active ? 'eye-slash' : 'eye'"
-                                    wire:click="toggleActive({{ $preset->id }})"
+                                    :color="$context->is_active ? 'neutral' : 'blue'"
+                                    :icon="$context->is_active ? 'eye-slash' : 'eye'"
+                                    wire:click="toggleActive({{ $context->id }})"
                                 >
-                                    {{ $preset->is_active ? 'Disable' : 'Enable' }}
+                                    {{ $context->is_active ? 'Disable' : 'Enable' }}
                                 </x-ui.button>
                             </div>
                             <button
-                                wire:click="deletePreset({{ $preset->id }})"
-                                wire:confirm="Are you sure you want to delete '{{ $preset->name }}'? This cannot be undone."
+                                wire:click="deletePreset({{ $context->id }})"
+                                wire:confirm="Are you sure you want to delete '{{ $context->name }}'? This cannot be undone."
                                 class="text-neutral-400 hover:text-red-500 transition-colors p-1"
                             >
                                 <x-ui.icon name="trash" class="size-4" />

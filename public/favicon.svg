@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="212.97758mm"
+   height="178.62906mm"
+   viewBox="0 0 212.97759 178.62906"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <style>
+    path { fill: #000; }
+    @media (prefers-color-scheme: dark) {
+      path { fill: #fff; }
+    }
+  </style>
+  <g
+     id="layer1"
+     transform="translate(-0.71949724,-20.895962)">
+    <path
+       style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       d="m 34.255343,30.089202 30.137395,0.03807 a 11.010792,11.010792 31.728591 0 1 9.830127,6.077989 L 147.3014,182.04306 a 5.7176529,5.7176529 121.6924 0 1 -5.11179,8.27914 H 108.21828 A 14.661723,14.661723 32.276709 0 1 94.978947,181.96017 L 27.668971,40.502619 a 7.2837979,7.2837979 122.3129 0 1 6.586372,-10.413417 z"
+       id="path1"
+       transform="matrix(1.1303171,0,0,1.1090373,-29.7565,-11.78675)" />
+    <path
+       style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       d="M 153.01511,138.16625 214.89199,34.732043 a 3.477392,3.477392 60.338053 0 0 -2.99709,-5.262574 l -61.30776,0.227691 a 18.34115,18.34115 152.72224 0 0 -14.83441,7.649316 l -24.95425,34.782225 a 7.6654164,7.6654164 94.143396 0 0 -0.579,7.99256 l 29.8438,57.647189 a 7.4170828,7.4170828 1.7592052 0 0 12.95183,0.3978 z"
+       id="path2"
+       transform="matrix(1.1303171,0,0,1.1090373,-29.7565,-11.78675)" />
+    <path
+       style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       d="m 76.056516,190.36065 -42.285352,0.17553 a 4.7568652,4.7568652 62.573629 0 1 -3.897916,-7.51138 l 25.849179,-36.39337 a 5.4216391,5.4216391 5.0376656 0 1 9.32136,0.82169 l 16.314127,34.49758 a 5.8913677,5.8913677 122.2262 0 1 -5.301398,8.40995 z"
+       id="path4"
+       transform="matrix(1.1303171,0,0,1.1090373,-27.989583,-11.78675)" />
+  </g>
+</svg>

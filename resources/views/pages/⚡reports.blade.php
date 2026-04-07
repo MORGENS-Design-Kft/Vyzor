@@ -5,7 +5,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Models\Report;
-use App\Models\LLMContextPreset;
+use App\AiContextType;
+use App\Models\AiContext;
 use App\ReportStatusEnum;
 use Illuminate\Support\Str;
 
@@ -61,7 +62,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function getPresetsProperty()
     {
-        return LLMContextPreset::active()->ordered()->pluck('name', 'slug');
+        return AiContext::active()->ofType(AiContextType::PRESET)->ordered()->pluck('name', 'slug');
     }
 
     public function with(): array
@@ -111,7 +112,12 @@ new #[Layout('layouts.app')] class extends Component {
 };
 ?>
 
-<div class="p-6 space-y-6">
+<div
+    @if ($reports instanceof \Illuminate\Pagination\LengthAwarePaginator && $reports->contains(fn ($r) => in_array($r->status, [\App\ReportStatusEnum::PENDING, \App\ReportStatusEnum::GENERATING])))
+        wire:poll.10s
+    @endif
+    class="p-6 space-y-6"
+>
     <div class="flex items-center justify-between">
         <div>
             <x-ui.heading level="h1" size="xl">All Reports</x-ui.heading>

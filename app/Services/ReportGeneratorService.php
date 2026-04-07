@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Ai\Agents\ReportAnalyst;
+use App\AiContextType;
+use App\Models\AiContext;
 use App\Models\ClarityInsight;
-use App\Models\LLMContextPreset;
+use App\Models\Heatmap;
 use App\Models\Report;
 use App\ReportStatusEnum;
 
@@ -37,11 +39,17 @@ class ReportGeneratorService
 
     protected function buildPrompt(Report $report): string
     {
+        $provider = config('ai.default', 'openai');
         $parts = [];
 
         // Add preset context
         if ($report->preset) {
-            $preset = LLMContextPreset::where('slug', $report->preset)->first();
+            $preset = AiContext::active()
+                ->ofType(AiContextType::PRESET)
+                ->forModel($provider)
+                ->where('slug', $report->preset)
+                ->first();
+
             if ($preset) {
                 $parts[] = $preset->context;
             }
@@ -71,7 +79,41 @@ class ReportGeneratorService
                 "Please provide a general analysis framework and recommendations based on the preset context.";
         }
 
-        $parts[] = "\n## Output Format\nProvide the report in markdown format with clear headings, bullet points, and actionable recommendations.";
+        // Add Heatmap data (only when toggled on)
+        if ($report->include_heatmaps) {
+            $heatmaps = Heatmap::where('project_id', $report->project_id)
+                ->when($report->aspect_date_from, fn($q) => $q->where('date', '>=', $report->aspect_date_from))
+                ->when($report->aspect_date_to, fn($q) => $q->where('date', '<=', $report->aspect_date_to))
+                ->get();
+
+            if ($heatmaps->isNotEmpty()) {
+                $heatmapContext = AiContext::active()
+                    ->ofType(AiContextType::INSTRUCTION)
+                    ->forModel($provider)
+                    ->where('slug', 'heatmap-analysis')
+                    ->first();
+
+                if ($heatmapContext) {
+                    $parts[] = "\n" . $heatmapContext->context;
+                }
+
+                foreach ($heatmaps as $heatmap) {
+                    $parts[] = "### Heatmap: {$heatmap->filename} (Date: {$heatmap->date->format('Y-m-d')})\n" .
+                        "```csv\n" . $heatmap->heatmap . "\n```\n";
+                }
+            }
+        }
+
+        // Add output format instructions
+        $outputFormat = AiContext::active()
+            ->ofType(AiContextType::INSTRUCTION)
+            ->forModel($provider)
+            ->where('slug', 'output-format')
+            ->first();
+
+        if ($outputFormat) {
+            $parts[] = "\n" . $outputFormat->context;
+        }
 
         return implode("\n", $parts);
     }

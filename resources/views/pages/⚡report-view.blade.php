@@ -56,7 +56,12 @@ new #[Layout('layouts.app')] class extends Component {
 };
 ?>
 
-<div class="p-6 space-y-6">
+<div
+    @if ($report->status === ReportStatusEnum::PENDING || $report->status === ReportStatusEnum::GENERATING)
+        wire:poll.5s
+    @endif
+    class="p-6 space-y-6"
+>
     {{-- Header --}}
     <div class="flex items-start justify-between gap-4">
         <div class="flex items-center gap-3">

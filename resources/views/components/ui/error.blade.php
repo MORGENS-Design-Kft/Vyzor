@@ -35,7 +35,7 @@
         {{ $attributes->class(Arr::toCssClasses($classes)) }} 
         data-slot="error"
     >
-        <x-ui.icon name="exclamation-circle" class="flex-shrink-0 w-4 h-4 mt-0.5" />
+        <x-ui.icon name="warning-circle" class="flex-shrink-0 w-4 h-4 mt-0.5" />
         <div class="flex-1">
             @if (count($errorMessages) === 1)
                 <span>{{ $errorMessages[0] }}</span>

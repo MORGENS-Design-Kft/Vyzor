@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\AiContextType;
 use App\ReportStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ class Report extends Model
         'is_ai',
         'preset',
         'custom_prompt',
+        'include_heatmaps',
         'aspect_date_from',
         'aspect_date_to',
         'ai_model_name',
@@ -26,6 +28,7 @@ class Report extends Model
     {
         return [
             'is_ai' => 'boolean',
+            'include_heatmaps' => 'boolean',
             'aspect_date_from' => 'date',
             'aspect_date_to' => 'date',
             'status' => ReportStatusEnum::class,
@@ -49,7 +52,8 @@ class Report extends Model
 
     public function contextPreset(): BelongsTo
     {
-        return $this->belongsTo(LLMContextPreset::class, 'preset', 'slug');
+        return $this->belongsTo(AiContext::class, 'preset', 'slug')
+            ->where('type', AiContextType::PRESET);
     }
 
     public function scopeAiReports($query)

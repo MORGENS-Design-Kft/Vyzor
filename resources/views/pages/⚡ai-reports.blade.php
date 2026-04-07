@@ -3,8 +3,10 @@
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use App\AiContextType;
+use App\Models\AiContext;
 use App\Models\Report;
-use App\Models\LLMContextPreset;
+use App\Models\Heatmap;
 use App\ReportStatusEnum;
 use App\Jobs\GenerateAiReport;
 use Illuminate\Support\Str;
@@ -15,6 +17,7 @@ new #[Layout('layouts.app')] class extends Component {
     public string $customPrompt = '';
     public string $dateFrom = '';
     public string $dateTo = '';
+    public bool $includeHeatmaps = false;
 
     // For manual report creation
     public string $manualTitle = '';
@@ -37,12 +40,23 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function getPresetsProperty()
     {
-        return LLMContextPreset::active()->ordered()->get();
+        return AiContext::active()->ofType(AiContextType::PRESET)->ordered()->get();
+    }
+
+    public function getAvailableHeatmapCountProperty(): int
+    {
+        $projectId = session('current_project_id');
+        if (!$projectId) return 0;
+
+        return Heatmap::where('project_id', $projectId)
+            ->when($this->dateFrom, fn($q) => $q->where('date', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->where('date', '<=', $this->dateTo))
+            ->count();
     }
 
     public function previewPreset(string $slug): void
     {
-        $preset = LLMContextPreset::where('slug', $slug)->first();
+        $preset = AiContext::where('slug', $slug)->first();
         if ($preset) {
             $this->presetPreviewContent = $preset->context;
             $this->presetPreviewName = $preset->name;
@@ -70,7 +84,7 @@ new #[Layout('layouts.app')] class extends Component {
             return;
         }
 
-        $presetModel = LLMContextPreset::where('slug', $this->preset)->first();
+        $presetModel = AiContext::where('slug', $this->preset)->first();
         $presetTitle = $presetModel?->name ?? Str::title(str_replace('-', ' ', $this->preset));
 
         $report = Report::create([
@@ -81,6 +95,7 @@ new #[Layout('layouts.app')] class extends Component {
             'is_ai' => true,
             'preset' => $this->preset,
             'custom_prompt' => $this->customPrompt ?: null,
+            'include_heatmaps' => $this->includeHeatmaps,
             'aspect_date_from' => $this->dateFrom,
             'aspect_date_to' => $this->dateTo,
             'ai_model_name' => null,
@@ -91,7 +106,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         session()->flash('success', 'AI report requested. It will appear in the reports list once generated.');
 
-        $this->reset(['preset', 'customPrompt']);
+        $this->reset(['preset', 'customPrompt', 'includeHeatmaps']);
         $this->dateFrom = now()->subDays(7)->format('Y-m-d');
         $this->dateTo = now()->format('Y-m-d');
     }
@@ -146,7 +161,12 @@ new #[Layout('layouts.app')] class extends Component {
 };
 ?>
 
-<div class="p-6 space-y-6">
+<div
+    @if ($recentReports->contains(fn ($r) => in_array($r->status, [\App\ReportStatusEnum::PENDING, \App\ReportStatusEnum::GENERATING])))
+        wire:poll.10s
+    @endif
+    class="p-6 space-y-6"
+>
     <div class="flex items-center justify-between">
         <div>
             <x-ui.heading level="h1" size="xl">Reports</x-ui.heading>
@@ -260,6 +280,15 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-ui.error name="dateTo" />
                             </x-ui.field>
                         </div>
+
+                        {{-- Include Heatmaps --}}
+                        <x-ui.field>
+                            <x-ui.checkbox
+                                wire:model.live="includeHeatmaps"
+                                label="Include Heatmap Data {{ $this->availableHeatmapCount > 0 ? '(' . $this->availableHeatmapCount . ' available in date range)' : '(none available in date range)' }}"
+                                description="When enabled, click/tap heatmap data from Microsoft Clarity will be included for the AI to analyse user interaction patterns."
+                            />
+                        </x-ui.field>
 
                         {{-- Custom Prompt --}}
                         <x-ui.field>
