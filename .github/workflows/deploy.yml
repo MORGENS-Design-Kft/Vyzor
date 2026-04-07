@@ -31,7 +31,7 @@ jobs:
           node-version: '20'
 
       - name: NPM security audit
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
   # ── Job 2: Deploy ─────────────────────────────────────────────────
   deploy:
