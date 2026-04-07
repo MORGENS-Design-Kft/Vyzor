@@ -11,6 +11,7 @@ window.Alpine = Alpine;
 Alpine.plugin(rover);
 
 await import("./components/select");
+await import("./components/markdown-renderer");
 
 // ...
 import './globals/modals.js';
