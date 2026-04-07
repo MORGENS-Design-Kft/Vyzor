@@ -126,16 +126,22 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-ui.button variant="outline" color="neutral" icon="pencil-simple" wire:click="startEditing">
                     Edit
                 </x-ui.button>
-                <button
-                    wire:click="deleteReport"
-                    wire:confirm="Are you sure you want to delete this report? This cannot be undone."
-                    class="p-2 text-neutral-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20"
-                >
-                    <x-ui.icon name="trash" class="size-4" />
-                </button>
+                <x-ui.modal.trigger id="delete-report-modal">
+                    <button class="p-2 text-neutral-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20">
+                        <x-ui.icon name="trash" class="size-4" />
+                    </button>
+                </x-ui.modal.trigger>
             @endif
         </div>
     </div>
+
+    <x-ui.modal id="delete-report-modal" title="Delete Report" size="sm" centered>
+        <x-ui.text>Are you sure you want to delete <strong>{{ $report->title }}</strong>? This cannot be undone.</x-ui.text>
+        <x-slot:footer>
+            <x-ui.button variant="ghost" x-on:click="isOpen = false">Cancel</x-ui.button>
+            <x-ui.button variant="danger" wire:click="deleteReport" x-on:click="isOpen = false">Delete</x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
 
     {{-- Report Meta Info --}}
     @if ($report->is_ai && ($report->custom_prompt || $report->status === ReportStatusEnum::PENDING || $report->status === ReportStatusEnum::GENERATING))
@@ -184,8 +190,9 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-ui.error name="editContent" />
             </x-ui.field>
         @elseif ($report->content)
-            <div class="prose prose-sm dark:prose-invert max-w-none">
-                {!! nl2br(e($report->content)) !!}
+            <div x-data="markdownRenderer" class="prose prose-sm dark:prose-invert max-w-none">
+                <div x-ref="source" class="hidden">{{ $report->content }}</div>
+                <div x-html="rendered"></div>
             </div>
         @else
             <x-ui.empty>

@@ -6,6 +6,7 @@ use Livewire\Attributes\On;
 use App\Models\Report;
 use App\Models\LLMContextPreset;
 use App\ReportStatusEnum;
+use App\Jobs\GenerateAiReport;
 use Illuminate\Support\Str;
 
 new #[Layout('layouts.app')] class extends Component {
@@ -72,7 +73,7 @@ new #[Layout('layouts.app')] class extends Component {
         $presetModel = LLMContextPreset::where('slug', $this->preset)->first();
         $presetTitle = $presetModel?->name ?? Str::title(str_replace('-', ' ', $this->preset));
 
-        Report::create([
+        $report = Report::create([
             'project_id' => $projectId,
             'user_id' => auth()->id(),
             'title' => $presetTitle . ' - ' . \Carbon\Carbon::parse($this->dateFrom)->format('M d') . ' to ' . \Carbon\Carbon::parse($this->dateTo)->format('M d, Y'),
@@ -85,6 +86,8 @@ new #[Layout('layouts.app')] class extends Component {
             'ai_model_name' => null,
             'status' => ReportStatusEnum::PENDING,
         ]);
+
+        GenerateAiReport::dispatch($report);
 
         session()->flash('success', 'AI report requested. It will appear in the reports list once generated.');
 
@@ -149,7 +152,7 @@ new #[Layout('layouts.app')] class extends Component {
             <x-ui.heading level="h1" size="xl">Reports</x-ui.heading>
             <x-ui.description class="mt-1">Request AI-generated reports or create your own notes for the current project.</x-ui.description>
         </div>
-        <x-ui.button variant="outline" color="neutral" size="sm" icon="gear" href="/settings">
+        <x-ui.button variant="outline" color="neutral" size="sm" icon="gear" href="{{ route('preset.settings') }}">
             Manage Presets
         </x-ui.button>
     </div>

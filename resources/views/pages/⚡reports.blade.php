@@ -269,16 +269,22 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <div class="flex items-center gap-2 shrink-0">
                                 <x-ui.badge size="sm" color="{{ $report->status->color() }}">{{ $report->status->label() }}</x-ui.badge>
-                                <button
-                                    wire:click="deleteReport({{ $report->id }})"
-                                    wire:confirm="Are you sure you want to delete this report?"
-                                    class="text-neutral-400 hover:text-red-500 transition-colors"
-                                >
-                                    <x-ui.icon name="trash" class="size-4" />
-                                </button>
+                                <x-ui.modal.trigger :id="'delete-report-' . $report->id">
+                                    <button class="text-neutral-400 hover:text-red-500 transition-colors">
+                                        <x-ui.icon name="trash" class="size-4" />
+                                    </button>
+                                </x-ui.modal.trigger>
                             </div>
                         </div>
                     </x-ui.card>
+
+                    <x-ui.modal :id="'delete-report-' . $report->id" title="Delete Report" size="sm" centered>
+                        <x-ui.text>Are you sure you want to delete <strong>{{ $report->title }}</strong>?</x-ui.text>
+                        <x-slot:footer>
+                            <x-ui.button variant="ghost" x-on:click="isOpen = false">Cancel</x-ui.button>
+                            <x-ui.button variant="danger" wire:click="deleteReport({{ $report->id }})" x-on:click="isOpen = false">Delete</x-ui.button>
+                        </x-slot:footer>
+                    </x-ui.modal>
                 @endforeach
             </div>
 

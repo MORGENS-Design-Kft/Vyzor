@@ -1,17 +1,17 @@
-import markdownit from "markdown-it";
+import { marked } from "marked";
 import hljs from "highlight.js";
 
-const md = markdownit({
-    html: false,
-    linkify: true,
-    typographer: true,
-    highlight: function (str, lang) {
-        if (lang && hljs.getLanguage(lang)) {
-            try {
-                return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`;
-            } catch (_) {}
-        }
-        return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+marked.use({
+    gfm: true,
+    breaks: true,
+    renderer: {
+        code({ text, lang }) {
+            const code =
+                lang && hljs.getLanguage(lang)
+                    ? hljs.highlight(text, { language: lang }).value
+                    : text;
+            return `<pre class="hljs"><code>${code}</code></pre>`;
+        },
     },
 });
 
@@ -20,10 +20,15 @@ Alpine.data("markdownRenderer", () => ({
 
     init() {
         this.render();
+
+        // Re-render after Livewire updates (e.g. save/cancel editing)
+        Livewire.hook("morph.updated", () => {
+            this.$nextTick(() => this.render());
+        });
     },
 
     render() {
         const source = this.$refs.source?.textContent || "";
-        this.rendered = md.render(source);
+        this.rendered = marked.parse(source);
     },
 }));

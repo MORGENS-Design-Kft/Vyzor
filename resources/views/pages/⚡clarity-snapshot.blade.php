@@ -56,7 +56,7 @@ new #[Layout('layouts.app')] class extends Component {
             <x-ui.description class="mt-1">Single point-in-time Microsoft Clarity data for the current project.</x-ui.description>
         </div>
         <div class="flex items-center gap-3">
-            {{-- <x-ui.date-picker type="datetime-local" wire:model.live="datetime" class="w-60" /> --}}
+            <x-ui.input type="datetime-local" wire:model.live="datetime" class="w-60" />
             <livewire:clarity-fetch-button />
         </div>
     </div>

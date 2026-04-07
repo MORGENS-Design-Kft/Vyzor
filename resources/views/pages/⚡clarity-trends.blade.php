@@ -8,6 +8,15 @@ use Carbon\Carbon;
 
 new #[Layout('layouts.app')] class extends Component {
 
+    public string $dateFrom = '';
+    public string $dateTo = '';
+
+    public function mount(): void
+    {
+        $this->dateFrom = now()->subDays(3)->format('Y-m-d');
+        $this->dateTo = now()->format('Y-m-d');
+    }
+
     #[On('current-project-changed')]
     public function onProjectChanged() {}
 
@@ -19,8 +28,8 @@ new #[Layout('layouts.app')] class extends Component {
             return ['chartData' => null];
         }
 
-        $start = now()->subDays(3)->startOfDay();
-        $end = now()->endOfDay();
+        $start = Carbon::parse($this->dateFrom)->startOfDay();
+        $end = Carbon::parse($this->dateTo)->endOfDay();
 
         // Use date_from to find data covering the last 3 days
         $insights = ClarityInsight::where('project_id', $projectId)
@@ -134,9 +143,21 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <div class="p-6 space-y-6" id="clarity-trends-root" data-chart='@json($chartData)'>
-    <div>
-        <x-ui.heading level="h1" size="xl">Clarity Trends</x-ui.heading>
-        <x-ui.description class="mt-1">Last 3 days of Clarity data for the current project.</x-ui.description>
+    <div class="flex items-center justify-between">
+        <div>
+            <x-ui.heading level="h1" size="xl">Clarity Trends</x-ui.heading>
+            <x-ui.description class="mt-1">Clarity data trends for the current project.</x-ui.description>
+        </div>
+        <div class="flex items-center gap-3">
+            <x-ui.field>
+                <x-ui.label>From</x-ui.label>
+                <x-ui.input type="date" wire:model.live="dateFrom" />
+            </x-ui.field>
+            <x-ui.field>
+                <x-ui.label>To</x-ui.label>
+                <x-ui.input type="date" wire:model.live="dateTo" />
+            </x-ui.field>
+        </div>
     </div>
 
     @if (!$chartData)
