@@ -3,6 +3,10 @@ set -e
 
 cd /var/www/html
 
+# Make all project files readable by www-data (PHP-FPM worker user)
+chown -R www-data:www-data /var/www/html
+chmod -R 755 /var/www/html
+
 # Ensure storage directories exist and are writable
 mkdir -p storage/framework/{cache,sessions,views}
 mkdir -p storage/logs
@@ -29,5 +33,5 @@ php artisan migrate --force
 # Create storage symlink
 php artisan storage:link 2>/dev/null || true
 
-# Start PHP-FPM
-exec php-fpm
+# Execute the passed command (defaults to php-fpm from CMD)
+exec "$@"
