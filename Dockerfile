@@ -1,5 +1,5 @@
 # Runtime-only image — project files are bind-mounted from the host
-FROM php:8.2-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # Install system dependencies
 RUN apk add --no-cache \
