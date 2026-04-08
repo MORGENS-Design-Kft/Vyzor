@@ -18,14 +18,13 @@ services:
     networks:
       - vyzor-internal
 
-  # ── Laravel Application ───────────────────────────────────────────
+  # ── PHP-FPM Application ──────────────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: vyzor-app
     env_file: .env
-    command: php artisan serve --host=0.0.0.0 --port=8000
     volumes:
       - .:/var/www/html
     depends_on:
@@ -34,7 +33,6 @@ services:
     restart: unless-stopped
     networks:
       - vyzor-internal
-      - proxy-network
 
   # ── Queue Worker ─────────────────────────────────────────────────
   queue:
@@ -67,6 +65,20 @@ services:
     restart: unless-stopped
     networks:
       - vyzor-internal
+
+  # ── Nginx ────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: vyzor-nginx
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - .:/var/www/html:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - vyzor-internal
+      - proxy-network
 
 volumes:
   vyzor_pgdata:
