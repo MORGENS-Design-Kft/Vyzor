@@ -75,13 +75,10 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            # ── Phase 2: Build new images (old containers keep running) ──
-            echo "=== Phase 2: Building images ==="
+            # ── Phase 2: Build runtime image & start containers ──
+            echo "=== Phase 2: Starting containers ==="
             docker compose -f docker-compose.production.yml build
-
-            # ── Phase 3: Restart with new images ──
-            echo "=== Phase 3: Restarting services ==="
-            docker compose -f docker-compose.production.yml up -d --force-recreate --remove-orphans
+            docker compose -f docker-compose.production.yml up -d --remove-orphans
 
             # Wait for PHP-FPM to be ready
             echo "Waiting for services..."
@@ -93,15 +90,19 @@ jobs:
               sleep 1
             done
 
-            # ── Phase 3b: First-deploy one-time tasks ──
+            # ── Phase 2b: First-deploy one-time tasks ──
             # Generate APP_KEY if not set
             if ! grep -q "^APP_KEY=base64:" .env 2>/dev/null; then
               NEW_KEY=$(docker compose -f docker-compose.production.yml exec -T app php artisan key:generate --show)
               sed -i "s/^APP_KEY=.*/APP_KEY=${NEW_KEY}/" .env
-              echo "Generated new APP_KEY — restarting app services..."
-              docker compose -f docker-compose.production.yml restart app queue scheduler
-              sleep 5
+              echo "Generated new APP_KEY"
             fi
+
+            # ── Phase 3: Install dependencies & build assets ──
+            echo "=== Phase 3: Installing dependencies ==="
+            docker compose -f docker-compose.production.yml exec -T app composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+            docker compose -f docker-compose.production.yml exec -T app npm ci
+            docker compose -f docker-compose.production.yml exec -T app npm run build
 
             # ── Phase 4: Post-deploy tasks ──
             echo "=== Phase 4: Post-deploy tasks ==="
