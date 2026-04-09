@@ -1,15 +1,21 @@
 services:
   vyzor-db:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: vyzor-db
     environment:
-      POSTGRES_USER: vyzor
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: vyzor
-    ports:
-      - "5433:5432"
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - vyzor_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - vyzor-internal
 
 volumes:
   db_data:

@@ -83,7 +83,7 @@ jobs:
             # Wait for PHP-FPM to be ready
             echo "Waiting for services..."
             for i in $(seq 1 60); do
-              if docker compose -f docker-compose.production.yml exec -T app php -r "echo 'ok';" 2>/dev/null | grep -q ok; then
+              if docker compose -f docker-compose.production.yml exec -T vyzor-app php -r "echo 'ok';" 2>/dev/null | grep -q ok; then
                 echo "Services ready after ${i}s"
                 break
               fi
@@ -93,35 +93,35 @@ jobs:
             # ── Phase 2b: First-deploy one-time tasks ──
             # Generate APP_KEY if not set
             if ! grep -q "^APP_KEY=base64:" .env 2>/dev/null; then
-              NEW_KEY=$(docker compose -f docker-compose.production.yml exec -T app php artisan key:generate --show)
+              NEW_KEY=$(docker compose -f docker-compose.production.yml exec -T vyzor-app php artisan key:generate --show)
               sed -i "s/^APP_KEY=.*/APP_KEY=${NEW_KEY}/" .env
               echo "Generated new APP_KEY"
             fi
 
             # ── Phase 3: Install dependencies & build assets ──
             echo "=== Phase 3: Installing dependencies ==="
-            docker compose -f docker-compose.production.yml exec -T app composer install --no-dev --optimize-autoloader --no-interaction --no-progress
-            docker compose -f docker-compose.production.yml exec -T app npm ci
-            docker compose -f docker-compose.production.yml exec -T app npm run build
+            docker compose -f docker-compose.production.yml exec -T vyzor-app composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+            docker compose -f docker-compose.production.yml exec -T vyzor-app npm ci
+            docker compose -f docker-compose.production.yml exec -T vyzor-app npm run build
 
             # ── Phase 4: Post-deploy tasks ──
             echo "=== Phase 4: Post-deploy tasks ==="
-            docker compose -f docker-compose.production.yml exec -T app php artisan migrate --force
+            docker compose -f docker-compose.production.yml exec -T vyzor-app php artisan migrate --force
 
             # Seed database on first deploy only
             if [ ! -f ".seeded" ]; then
-              docker compose -f docker-compose.production.yml exec -T app php artisan db:seed --force
+              docker compose -f docker-compose.production.yml exec -T vyzor-app php artisan db:seed --class=AiContextSeeder --force
               touch .seeded
               echo "Database seeded (first deploy)"
             fi
 
-            docker compose -f docker-compose.production.yml exec -T app php artisan optimize
-            docker compose -f docker-compose.production.yml exec -T app php artisan storage:link 2>/dev/null || true
-            docker compose -f docker-compose.production.yml exec -T app php artisan queue:restart
+            docker compose -f docker-compose.production.yml exec -T vyzor-app php artisan optimize
+            docker compose -f docker-compose.production.yml exec -T vyzor-app php artisan storage:link 2>/dev/null || true
+            docker compose -f docker-compose.production.yml exec -T vyzor-app php artisan queue:restart
 
             # Fix permissions
-            docker compose -f docker-compose.production.yml exec -T app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
-            docker compose -f docker-compose.production.yml exec -T app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
+            docker compose -f docker-compose.production.yml exec -T vyzor-app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
+            docker compose -f docker-compose.production.yml exec -T vyzor-app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
             # Reload NPM nginx to refresh DNS for new container IPs
             docker exec nginx-proxy-manager nginx -s reload 2>/dev/null || true
