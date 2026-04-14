@@ -1,9 +1,11 @@
 <?php
 
+use App\Models\User;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Component {
     #[Validate('required|string')]
@@ -18,10 +20,14 @@ new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Componen
     {
         $this->validate();
 
-        if (!Auth::attempt(['name' => $this->name, 'password' => $this->password], $this->remember)) {
+        $user = User::whereRaw('LOWER(name) = ?', [strtolower($this->name)])->first();
+
+        if (!$user || !Hash::check($this->password, $user->password)) {
             $this->addError('name', __('auth.failed'));
             return;
         }
+
+        Auth::login($user, $this->remember);
 
         session()->regenerate();
 

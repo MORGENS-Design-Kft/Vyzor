@@ -10,10 +10,10 @@ use Livewire\Component;
 
 class UserForm extends Component
 {
-    #[Validate('required|string|max:255')]
+    #[Validate('required|string|max:255|unique:users,name')]
     public string $name = '';
 
-    #[Validate('required|email|max:255')]
+    #[Validate('required|email|max:255|unique:users,email')]
     public string $email = '';
 
     #[Validate('required|string|min:8|confirmed')]
