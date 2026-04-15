@@ -94,9 +94,9 @@ new class extends Component {
             return;
         }
 
-        // Close modal and tell listeners (trends / snapshot pages) to refresh.
+        // Close modal and reload so every page reflects the freshly fetched data.
         $this->dispatch('close-modal', id: $this->modalId);
-        $this->dispatch('clarity-fetched');
+        $this->js('window.location.reload()');
     }
 };
 ?>

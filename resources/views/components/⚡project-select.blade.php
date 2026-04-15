@@ -31,6 +31,9 @@ new class extends Component {
         if ($accessible) {
             $this->selectedProject = (string) $projectId;
             session(['current_project_id' => $projectId]);
+            // Notify other components (snapshot, trends, etc.) that mounted before
+            // localStorage was read, so they re-render with the restored project.
+            $this->dispatch('current-project-changed', projectId: $projectId);
         } else {
             $this->js("localStorage.removeItem('" . $this->storageKey() . "')");
         }
