@@ -116,19 +116,19 @@
                         <x-ui.navlist.item :label="__('Projects')" icon="check-square" href="/projects" />
                     </x-ui.navlist.group>
                     <x-ui.navlist.group :label="__('Project')">
-                        <x-ui.navlist.group :label="__('Clarity')" variant="compact">
+                        <x-ui.navlist.group :label="__('Clarity')" collapsable>
                             <x-ui.navlist.item :label="__('Snapshot')" icon="camera" href="/clarity/snapshot"
                                 :active="request()->is('clarity/snapshot')" />
                             <x-ui.navlist.item :label="__('Trends')" icon="chart-line-up" href="/clarity/trends"
                                 :active="request()->is('clarity/trends')" />
                         </x-ui.navlist.group>
-                        <x-ui.navlist.group :label="__('Reports')" variant="compact">
+                        <x-ui.navlist.group :label="__('Reports')" collapsable>
                             <x-ui.navlist.item :label="__('New Report')" icon="plus-circle" href="/ai-reports"
                                 :active="request()->is('ai-reports')" />
                             <x-ui.navlist.item :label="__('All Reports')" icon="book-bookmark" href="/reports"
                                 :active="request()->is('reports') || request()->is('reports/*')" />
                         </x-ui.navlist.group>
-                        <x-ui.navlist.group :label="__('Heatmaps')" variant="compact">
+                        <x-ui.navlist.group :label="__('Heatmaps')" collapsable>
                             <x-ui.navlist.item :label="__('Upload')" icon="upload-simple" href="/heatmaps/upload"
                                 :active="request()->is('heatmaps/upload')" />
                             <x-ui.navlist.item :label="__('All Heatmaps')" icon="fire" href="/heatmaps"
@@ -138,7 +138,7 @@
                     </x-ui.navlist.group>
                     <x-ui.navlist.group :label="__('System')">
                         <x-ui.navlist.item :label="__('Users | Customers')" icon="users" href="/users" />
-                        <x-ui.navlist.group :label="__('Settings')" icon="gear" variant="compact" href="/settings" :active="request()->is('settings')">
+                        <x-ui.navlist.group :label="__('Settings')" icon="gear" collapsable href="/settings" :active="request()->is('settings')">
                             <x-ui.navlist.item :label="__('Contexts')" icon="tag" href="/settings/contexts"
                                 :active="request()->is('settings/contexts')" />
                         </x-ui.navlist.group>
