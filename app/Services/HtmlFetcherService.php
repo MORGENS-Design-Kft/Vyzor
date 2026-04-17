@@ -15,10 +15,10 @@ use Illuminate\Support\Facades\Log;
 class HtmlFetcherService
 {
     /** Maximum body size to accept (2 MB). */
-    protected const MAX_BODY_BYTES = config('services.htmlFetcher.max_body_bytes', 2 * 1024 * 1024);
+    protected const MAX_BODY_BYTES_DEFAULT = 2 * 1024 * 1024;
 
     /** Request timeout in seconds. */
-    protected const TIMEOUT = config('services.htmlFetcher.timeout', 10);
+    protected const TIMEOUT_DEFAULT = 10;
 
     /**
      * Fetch a URL and return cleaned text content.
@@ -30,7 +30,9 @@ class HtmlFetcherService
     public function fetch(string $url): ?string
     {
         try {
-            $response = Http::timeout(self::TIMEOUT)
+            $timeout = config('services.htmlFetcher.timeout', self::TIMEOUT_DEFAULT);
+
+            $response = Http::timeout($timeout)
                 ->withHeaders([
                     'User-Agent' => 'VyzorBot/1.0 (page-analysis)',
                     'Accept' => 'text/html',
@@ -45,8 +47,9 @@ class HtmlFetcherService
             $body = $response->body();
 
             // Guard against excessively large responses.
-            if (strlen($body) > self::MAX_BODY_BYTES) {
-                $body = substr($body, 0, self::MAX_BODY_BYTES);
+            $maxBytes = config('services.htmlFetcher.max_body_bytes', self::MAX_BODY_BYTES_DEFAULT);
+            if (strlen($body) > $maxBytes) {
+                $body = substr($body, 0, $maxBytes);
             }
 
             return $this->clean($body);
