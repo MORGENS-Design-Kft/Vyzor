@@ -171,11 +171,14 @@ new #[Layout('layouts.app')] class extends Component {
     @endif
 
     @if ($report->status === ReportStatusEnum::FAILED)
-        <div class="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4">
+        <div class="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4 space-y-2">
             <div class="flex items-center gap-2">
                 <x-ui.icon name="warning" class="size-5 text-red-600 dark:text-red-400" />
-                <span class="text-sm text-red-700 dark:text-red-300">{{ __('This report failed to generate. You can try requesting a new one.') }}</span>
+                <span class="text-sm font-medium text-red-700 dark:text-red-300">{{ __('This report failed to generate. You can try requesting a new one.') }}</span>
             </div>
+            @if ($report->content && str_starts_with($report->content, 'Error:'))
+                <pre class="text-xs text-red-600/80 dark:text-red-400/80 whitespace-pre-wrap wrap-break-word mt-1 ml-7">{{ $report->content }}</pre>
+            @endif
         </div>
     @endif
 
@@ -194,7 +197,7 @@ new #[Layout('layouts.app')] class extends Component {
                 ></textarea>
                 <x-ui.error name="editContent" />
             </x-ui.field>
-        @elseif ($report->content)
+        @elseif ($report->content && $report->status !== ReportStatusEnum::FAILED)
             <div wire:key="markdown-{{ $report->id }}-{{ $report->updated_at->timestamp }}" x-data="markdownRenderer" class="prose prose-sm dark:prose-invert max-w-none">
                 <div x-ref="source" class="hidden">{{ $report->content }}</div>
                 <div x-html="rendered"></div>
