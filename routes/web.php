@@ -10,7 +10,7 @@ Route::get('/', function () {
 
     return Auth::user()->isCustomer()
         ? redirect()->route('customer.dashboard')
-        : redirect()->route('clarity.snapshot');  // admin also goes here
+        : redirect()->route('projects');
 });
 
 Route::middleware('guest')->group(function () {

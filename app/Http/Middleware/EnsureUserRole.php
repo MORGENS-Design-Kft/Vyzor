@@ -20,7 +20,7 @@ class EnsureUserRole
         if ($user?->role !== UserRoleEnum::from($role)) {
             return $user?->isCustomer()
                 ? redirect()->route('customer.dashboard')
-                : redirect()->route('clarity.snapshot');
+                : redirect()->route('projects');
         }
 
         return $next($request);

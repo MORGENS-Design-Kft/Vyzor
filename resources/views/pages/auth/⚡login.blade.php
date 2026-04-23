@@ -33,7 +33,7 @@ new #[Layout('layouts.app', ['layoutVariant' => 'bare'])] class extends Componen
 
         $default = auth()->user()->isCustomer()
             ? route('customer.dashboard')
-            : route('clarity.snapshot');
+            : route('projects');
 
         $this->redirectIntended(default: $default, navigate: true);
     }
