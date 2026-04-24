@@ -28,6 +28,10 @@ new #[Layout('layouts.app')] class extends Component {
     public bool $showForm = false;
     public string $filterType = '';
 
+    // When true, hides delete and disable buttons for non-preset contexts (system, instruction).
+    // Simplified safeguard to prevent accidental modification of core contexts — will be reworked later.
+    public bool $protectNonPresets = true;
+
     public function mount(): void
     {
         abort_unless(auth()->user()->can('permission', PermissionEnum::VIEW_CONTEXTS), 403);
@@ -487,28 +491,33 @@ new #[Layout('layouts.app')] class extends Component {
                         <x-ui.separator class="my-3" />
 
                         <div class="flex items-center justify-between">
+                            @php $isProtected = $protectNonPresets && $context->type !== App\AiContextType::PRESET; @endphp
                             <div class="flex items-center gap-1">
                                 <x-ui.button size="xs" variant="outline" color="neutral" icon="pencil-simple" wire:click="editPreset({{ $context->id }})" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_CONTEXTS)">
                                     {{ __('Edit') }}
                                 </x-ui.button>
-                                <x-ui.button
-                                    size="xs"
-                                    variant="outline"
-                                    :color="$context->is_active ? 'neutral' : 'blue'"
-                                    :icon="$context->is_active ? 'eye-slash' : 'eye'"
-                                    wire:click="toggleActive({{ $context->id }})"
-                                >
-                                    {{ $context->is_active ? __('Disable') : __('Enable') }}
-                                </x-ui.button>
+                                @unless ($isProtected)
+                                    <x-ui.button
+                                        size="xs"
+                                        variant="outline"
+                                        :color="$context->is_active ? 'neutral' : 'blue'"
+                                        :icon="$context->is_active ? 'eye-slash' : 'eye'"
+                                        wire:click="toggleActive({{ $context->id }})"
+                                    >
+                                        {{ $context->is_active ? __('Disable') : __('Enable') }}
+                                    </x-ui.button>
+                                @endunless
                             </div>
-                            <button
-                                wire:click="deletePreset({{ $context->id }})"
-                                wire:confirm="{{ __('Are you sure you want to delete \':name\'? This cannot be undone.', ['name' => $context->localizedName()]) }}"
-                                class="text-neutral-400 hover:text-red-500 transition-colors p-1"
-                                :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_CONTEXTS)"
-                            >
-                                <x-ui.icon name="trash" class="size-4" />
-                            </button>
+                            @unless ($isProtected)
+                                <button
+                                    wire:click="deletePreset({{ $context->id }})"
+                                    wire:confirm="{{ __('Are you sure you want to delete \':name\'? This cannot be undone.', ['name' => $context->localizedName()]) }}"
+                                    class="text-neutral-400 hover:text-red-500 transition-colors p-1"
+                                    :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_CONTEXTS)"
+                                >
+                                    <x-ui.icon name="trash" class="size-4" />
+                                </button>
+                            @endunless
                         </div>
                     </x-ui.card>
                 @endforeach
