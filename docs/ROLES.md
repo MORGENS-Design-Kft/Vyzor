@@ -1,65 +1,80 @@
-# Roles
+# Szerepkorok
 
-In the project, there are a few roles that can access specific parts of the app depending on the role's clearance.
+A projektben nehany szerepkor letezik, amelyek a jogosultsagi szintjuktol fuggoen az alkalmazas kulonbozo reszeihez ferhetnek hozza.
 
 - **Admin**: 
-Can see, edit, add and manage everything on the page. The only user who can create other users
+Az oldalon mindent lathat, szerkeszthet, hozzaadhat es kezelhet. Az egyetlen felhasznalo, aki mas felhasznalokat letrehozhat.
+Az adminnak nincsenek kulon jogosultsagi sorai az adatbazisban — a `Gate::before` automatikusan teljes hozzaferest biztosit.
 
 - **Web**:
-Can create and manager their projects, create customer profiles, and request AI reports
+Letrehozhatja es kezelheti a sajat projektjeit, ugyfelprofilt hozhat letre, es AI riportokat kerhet.
+A web felhasznalok kezelhetik az ugyfeleket (letrehozas, szerkesztes, torles), de **nem** kezelhetnek mas web felhasznalokat — csak az adminok hozhatnak letre, szerkeszthetnek vagy torolhetnek web felhasznalokat.
+A web felhasznalok nem lathatjak az osszes projektet (`VIEW_ALL_PROJECTS`), csak a sajatjaikat es azokat, amelyeken kozremukodokent vesznek reszt.
 
-- **customer**: 
-This is a placeholder role for now. It has no acces anywhere. The customer
+- **Ugyfel (Customer)**: 
+Az ugyfelfiok egy ugyfelszervezetet kepvisel. Az ugyfeleknek nincs webes hozzaferesuk — csak a sajat ugyfel-vezerlopultjukat lathatjak. Alapertelmezetten nincsenek jogosultsagok hozzarendelve az ugyfel szerepkorhoz.
 
-- **Collaborator**: 
-The owner of a project can give this role to a user, who only has this to their assigned project.
-A collaborator has the same permissions as the owner, except editing the project's properties (This can be changed, but only the owner can change the owner and collaborators)
+- **Kozremukodo (Collaborator)**: 
+A kozremukodo **nem** szerepkor a `UserRoleEnum`-ban — ez egy projekt szintu virtualis szerepkor. A felhasznalo alap szerepkore tovabbra is `web`, de amikor egy olyan projektet er el, amelyen kozremukodokent vesz reszt, a jogosultsagi rendszer az effektiv szerepkoret `collaborator`-ra valtja az adott projekt jogosultsagi ellenorzeseihez.
 
-### Permissions
+A projekt tulajdonosa jelolheti ki a kozremukodoket. A kozremukodonek nagyreszben ugyanazok a projekt szintu jogosultsagai vannak, mint a tulajdonosnak, a kovetkezo kivetelekkel:
+  - Nem torolhet vagy hozhat letre projekteket
+  - Nem kezelhet felhasznalokat vagy ugyfeleket
+  - Nem tekintheti meg es nem kezelheti a kontextusokat
 
-A role has multiple permissions defined in a table
-The system checks if the user has the right permissions based on the role (except collaborators, it checks the project if there are collaborators, and if the current user is part of it. Same with project owner)
-In the core of the permission managger, if the user has admin role, it automatically unlocks everything without deffinition
+Csak a projekt tulajdonosa valtoztathatja meg a tulajdonost es a kozremukodok listajat.
 
-When a user has no permission to parts of a project, the buttons are disabled
+### Jogosultsagok
 
-The permissions for the roles can be added and removed in the role_permission table in the databse
+Egy szerepkorhoz tobb jogosultsag tartozik, amelyek a `role_permission` tablaban vannak definialva az adatbazisban.
+A rendszer ellenorzi, hogy a felhasznalonak megvannak-e a megfelelo jogosultsagai a szerepkore alapjan.
 
-Here are the permissions:
+Projekt szintu jogosultsagok eseten (amelyek `project.` prefixszel rendelkeznek), a rendszer a projekt jogosultsagi modelljat ellenorzi:
+- Ha a felhasznalo a **tulajdonos**, az alap szerepkore (`web`) kerul felhasznalasra a jogosultsag ellenorzeshez
+- Ha a felhasznalo **kozremukodo**, az effektiv szerepkor `collaborator`-ra valt
+- Ha a felhasznalo **sem** tulajdonos, sem kozremukodo, a hozzaferes megtagadasra kerul a jogosultsagoktol fuggetlenul
 
-- basics:
-    - view projects
-- users:
-    - view users list
-    - create user
-    - edit users
-    - remove users
-    - create customer
-    - edit customer
-    - remove customer
-- project:
-    - view all projects
-    - view owned projets
-    - view collab projects
-    - change project status
-    - edit project details
-    - delete project
-    - create project
+A jogosultsagkezelo magjaban, ha a felhasznalonak admin szerepkore van, automatikusan mindent felold kulon jogosultsagi sorok nelkul.
+
+Ha egy felhasznalonak nincs jogosultsaga a projekt egyes reszeihez, a gombok letiltasra kerulnek.
+
+A szerepkorok jogosultsagai a `role_permission` tablaban adhatoak hozza es tavolithatoak el az adatbazisban.
+
+Az alabbiakban a jogosultsagok es az azokkal rendelkezo szerepkorok:
+
+- alapok:
+    - projektek megtekintese (web, kozremukodo)
+- felhasznalok:
+    - felhasznalok listajanak megtekintese (web)
+    - felhasznalo letrehozasa (csak admin)
+    - felhasznalok szerkesztese (csak admin)
+    - felhasznalok torlese (csak admin)
+    - ugyfel letrehozasa (web)
+    - ugyfel szerkesztese (web)
+    - ugyfel torlese (web)
+- projekt:
+    - osszes projekt megtekintese (csak admin)
+    - sajat projektek megtekintese (web)
+    - kozremukodoi projektek megtekintese (web, kozremukodo)
+    - projekt statusz valtoztatasa (web, kozremukodo)
+    - projekt reszleteinek szerkesztese (web, kozremukodo)
+    - projekt torlese (web)
+    - projekt letrehozasa (web)
     - clarity:
-        - view clarity snapshots
-        - view clarity trends
-        - fetch clarity data
-    - Report:
-        - view reports
-        - request/create report
-        - edit report
-        - delete report
-    - Heatmap:
-        - upload heatmap
-        - view heatmaps
-        - edit heatmaps
-        - delete heatmaps
-- Context:
-    - view contexts page
-    - edit contexts
-    - add contexts
+        - clarity pillanatkepek megtekintese (web, kozremukodo)
+        - clarity trendek megtekintese (web, kozremukodo)
+        - clarity adatok lekerese (web, kozremukodo)
+    - riport:
+        - riportok megtekintese (web, kozremukodo)
+        - riport keres/letrehozas (web, kozremukodo)
+        - riport szerkesztese (web, kozremukodo)
+        - riport torlese (web, kozremukodo)
+    - hoterkep:
+        - hoterkep feltoltese (web, kozremukodo)
+        - hoterkepek megtekintese (web, kozremukodo)
+        - hoterkepek szerkesztese (web, kozremukodo)
+        - hoterkepek torlese (web, kozremukodo)
+- kontextus:
+    - kontextusok oldal megtekintese (web)
+    - kontextusok szerkesztese (web)
+    - kontextusok hozzaadasa (web)
