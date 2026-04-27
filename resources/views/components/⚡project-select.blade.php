@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use App\Models\Project;
+use App\Modules\Projects\Models\Project;
 
 new class extends Component {
 

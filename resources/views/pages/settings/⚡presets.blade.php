@@ -3,10 +3,10 @@
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
-use App\AiContextType;
-use App\ContextTag;
-use App\Models\AiContext;
-use App\PermissionEnum;
+use App\Modules\Ai\Contexts\Enums\AiContextType;
+use App\Modules\Ai\Contexts\Enums\ContextTag;
+use App\Modules\Ai\Contexts\Models\AiContext;
+use App\Modules\Users\Enums\PermissionEnum;
 
 new #[Layout('layouts.app')] class extends Component {
 
@@ -211,7 +211,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-ui.description class="mt-1">{{ __('Configure the contexts and instructions that shape AI behaviour in reports.') }}</x-ui.description>
             </div>
             @if (!$showForm)
-                <x-ui.button color="blue" icon="plus" wire:click="openCreateForm" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::ADD_CONTEXTS)">
+                <x-ui.button color="blue" icon="plus" wire:click="openCreateForm" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::ADD_CONTEXTS)">
                     {{ __('New Context') }}
                 </x-ui.button>
             @endif
@@ -464,7 +464,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <span class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{{ $context->localizedName() }}</span>
                                     <x-ui.badge size="sm" color="{{ $context->type->color() }}">{{ $context->type->label() }}</x-ui.badge>
                                     @foreach ($context->tags ?? [] as $tagValue)
-                                        @if ($tagEnum = \App\ContextTag::tryFrom($tagValue))
+                                        @if ($tagEnum = \App\Modules\Ai\Contexts\Enums\ContextTag::tryFrom($tagValue))
                                             <x-ui.badge size="sm" color="{{ $tagEnum->color() }}">{{ $tagEnum->label() }}</x-ui.badge>
                                         @endif
                                     @endforeach
@@ -491,9 +491,9 @@ new #[Layout('layouts.app')] class extends Component {
                         <x-ui.separator class="my-3" />
 
                         <div class="flex items-center justify-between">
-                            @php $isProtected = $protectNonPresets && $context->type !== App\AiContextType::PRESET; @endphp
+                            @php $isProtected = $protectNonPresets && $context->type !== App\Modules\Ai\Contexts\Enums\AiContextType::PRESET; @endphp
                             <div class="flex items-center gap-1">
-                                <x-ui.button size="xs" variant="outline" color="neutral" icon="pencil-simple" wire:click="editPreset({{ $context->id }})" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_CONTEXTS)">
+                                <x-ui.button size="xs" variant="outline" color="neutral" icon="pencil-simple" wire:click="editPreset({{ $context->id }})" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::EDIT_CONTEXTS)">
                                     {{ __('Edit') }}
                                 </x-ui.button>
                                 @unless ($isProtected)
@@ -513,7 +513,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     wire:click="deletePreset({{ $context->id }})"
                                     wire:confirm="{{ __('Are you sure you want to delete \':name\'? This cannot be undone.', ['name' => $context->localizedName()]) }}"
                                     class="text-neutral-400 hover:text-red-500 transition-colors p-1"
-                                    :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_CONTEXTS)"
+                                    :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::EDIT_CONTEXTS)"
                                 >
                                     <x-ui.icon name="trash" class="size-4" />
                                 </button>

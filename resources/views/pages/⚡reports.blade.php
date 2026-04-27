@@ -4,12 +4,12 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
-use App\Models\Report;
-use App\AiContextType;
-use App\Models\AiContext;
-use App\ReportStatusEnum;
+use App\Modules\Reports\Models\Report;
+use App\Modules\Ai\Contexts\Enums\AiContextType;
+use App\Modules\Ai\Contexts\Models\AiContext;
+use App\Modules\Reports\Enums\ReportStatusEnum;
 use Illuminate\Support\Str;
-use App\PermissionEnum;
+use App\Modules\Users\Enums\PermissionEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithPagination;
@@ -23,7 +23,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function mount(): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::VIEW_REPORTS, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::VIEW_REPORTS, \App\Modules\Projects\Models\Project::current()]), 403);
     }
 
     #[On('current-project-changed')]
@@ -60,7 +60,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function deleteReport(int $reportId): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::DELETE_REPORT, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::DELETE_REPORT, \App\Modules\Projects\Models\Project::current()]), 403);
         $report = Report::find($reportId);
         if ($report && $report->project_id == session('current_project_id')) {
             $report->delete();
@@ -120,7 +120,7 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <div
-    @if ($reports instanceof \Illuminate\Pagination\LengthAwarePaginator && $reports->contains(fn ($r) => in_array($r->status, [\App\ReportStatusEnum::PENDING, \App\ReportStatusEnum::GENERATING])))
+    @if ($reports instanceof \Illuminate\Pagination\LengthAwarePaginator && $reports->contains(fn ($r) => in_array($r->status, [\App\Modules\Reports\Enums\ReportStatusEnum::PENDING, \App\Modules\Reports\Enums\ReportStatusEnum::GENERATING])))
         wire:poll.10s
     @endif
     class="p-6 space-y-6"
@@ -187,7 +187,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <x-ui.label>{{ __('Status') }}</x-ui.label>
                         <x-ui.select wire:model.live="filterStatus" :placeholder="__('All')">
                             <x-ui.select.option value="">{{ __('All') }}</x-ui.select.option>
-                            @foreach (App\ReportStatusEnum::cases() as $status)
+                            @foreach (App\Modules\Reports\Enums\ReportStatusEnum::cases() as $status)
                                 <x-ui.select.option :value="$status->value">{{ $status->label() }}</x-ui.select.option>
                             @endforeach
                         </x-ui.select>
@@ -283,7 +283,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="flex items-center gap-2 shrink-0">
                                 <x-ui.badge size="sm" color="{{ $report->status->color() }}">{{ $report->status->label() }}</x-ui.badge>
                                 <x-ui.modal.trigger :id="'delete-report-' . $report->id">
-                                    <button class="text-neutral-400 hover:text-red-500 transition-colors" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::DELETE_REPORT)">
+                                    <button class="text-neutral-400 hover:text-red-500 transition-colors" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::DELETE_REPORT)">
                                         <x-ui.icon name="trash" class="size-4" />
                                     </button>
                                 </x-ui.modal.trigger>

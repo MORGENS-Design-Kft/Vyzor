@@ -4,8 +4,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
-use App\Models\Heatmap;
-use App\PermissionEnum;
+use App\Modules\Analytics\Heatmaps\Models\Heatmap;
+use App\Modules\Users\Enums\PermissionEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithPagination;
@@ -20,7 +20,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function mount(): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::VIEW_HEATMAPS, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::VIEW_HEATMAPS, \App\Modules\Projects\Models\Project::current()]), 403);
     }
 
     #[On('current-project-changed')]
@@ -59,7 +59,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function saveEdit(): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::EDIT_HEATMAPS, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::EDIT_HEATMAPS, \App\Modules\Projects\Models\Project::current()]), 403);
         $heatmap = Heatmap::find($this->editingId);
         if ($heatmap && $heatmap->project_id == session('current_project_id')) {
             $heatmap->update([
@@ -72,7 +72,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function deleteHeatmap(int $id): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::DELETE_HEATMAPS, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::DELETE_HEATMAPS, \App\Modules\Projects\Models\Project::current()]), 403);
         $heatmap = Heatmap::find($id);
         if ($heatmap && $heatmap->project_id == session('current_project_id')) {
             $heatmap->delete();
@@ -232,13 +232,13 @@ new #[Layout('layouts.app')] class extends Component {
                                     <x-ui.button size="sm" variant="outline" color="blue" wire:click="downloadCsv({{ $heatmap->id }})">
                                         {{ __('Download') }}
                                     </x-ui.button>
-                                    <x-ui.button size="sm" variant="outline" color="neutral" wire:click="startEdit({{ $heatmap->id }})" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_HEATMAPS)">
+                                    <x-ui.button size="sm" variant="outline" color="neutral" wire:click="startEdit({{ $heatmap->id }})" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::EDIT_HEATMAPS)">
                                         {{ __('Edit') }}
                                     </x-ui.button>
                                     <x-ui.button size="sm" variant="outline" color="red"
                                         wire:click="deleteHeatmap({{ $heatmap->id }})"
                                         wire:confirm="{{ __('Are you sure you want to delete this heatmap?') }}"
-                                        :disabled="auth()->user()->cannot('permission', App\PermissionEnum::DELETE_HEATMAPS)">
+                                        :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::DELETE_HEATMAPS)">
                                         {{ __('Delete') }}
                                     </x-ui.button>
                                 </div>

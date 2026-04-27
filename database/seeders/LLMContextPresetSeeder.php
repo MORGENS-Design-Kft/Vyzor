@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\LLMContextPreset;
+use App\Modules\Ai\Contexts\Models\LLMContextPreset;
 use Illuminate\Database\Seeder;
 
 class LLMContextPresetSeeder extends Seeder

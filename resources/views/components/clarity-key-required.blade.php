@@ -1,7 +1,7 @@
 @php
-    $project = \App\Models\Project::current();
+    $project = \App\Modules\Projects\Models\Project::current();
     $show = $project && !$project->hasClarityKey();
-    $canEdit = $show && auth()->user()->can('permission', [\App\PermissionEnum::EDIT_PROJECT_DETAILS, $project]);
+    $canEdit = $show && auth()->user()->can('permission', [\App\Modules\Users\Enums\PermissionEnum::EDIT_PROJECT_DETAILS, $project]);
 @endphp
 
 @if ($show)

@@ -3,9 +3,9 @@
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use App\Models\Project;
-use App\PermissionEnum;
-use App\ProjectStatusEnum;
+use App\Modules\Projects\Models\Project;
+use App\Modules\Users\Enums\PermissionEnum;
+use App\Modules\Projects\Enums\ProjectStatusEnum;
 
 new #[Layout('layouts.app')] class extends Component {
 
@@ -84,7 +84,7 @@ new #[Layout('layouts.app')] class extends Component {
             <x-ui.heading level="h1" size="xl">{{ __('Projects') }}</x-ui.heading>
             <x-ui.description class="mt-1">{{ __('All projects assigned to you.') }}</x-ui.description>
         </div>
-        <x-ui.button variant="primary" icon="plus" as="a" href="/new-project" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::CREATE_PROJECT)">{{ __('New Project') }}</x-ui.button>
+        <x-ui.button variant="primary" icon="plus" as="a" href="/new-project" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::CREATE_PROJECT)">{{ __('New Project') }}</x-ui.button>
     </div>
 
     @if (!$isAdmin)
@@ -130,9 +130,9 @@ new #[Layout('layouts.app')] class extends Component {
                     @foreach ($projects as $project)
                         @php
                             $isActive = session('current_project_id') == $project->id;
-                            $canChangeStatus = $user->can('permission', [App\PermissionEnum::CHANGE_PROJECT_STATUS, $project]);
-                            $canEdit = $user->can('permission', [App\PermissionEnum::EDIT_PROJECT_DETAILS, $project]);
-                            $canDelete = $user->can('permission', [App\PermissionEnum::DELETE_PROJECT, $project]);
+                            $canChangeStatus = $user->can('permission', [App\Modules\Users\Enums\PermissionEnum::CHANGE_PROJECT_STATUS, $project]);
+                            $canEdit = $user->can('permission', [App\Modules\Users\Enums\PermissionEnum::EDIT_PROJECT_DETAILS, $project]);
+                            $canDelete = $user->can('permission', [App\Modules\Users\Enums\PermissionEnum::DELETE_PROJECT, $project]);
                         @endphp
                         <tr class="h-16 {{ $isActive ? 'bg-neutral-50 dark:bg-neutral-900/30 border-l-2 border-l-green-500' : '' }}">
                             <td class="px-4 py-3 align-middle">

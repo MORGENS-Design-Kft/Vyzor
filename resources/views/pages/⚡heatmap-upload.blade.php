@@ -4,8 +4,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
-use App\Models\Heatmap;
-use App\PermissionEnum;
+use App\Modules\Analytics\Heatmaps\Models\Heatmap;
+use App\Modules\Users\Enums\PermissionEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithFileUploads;
@@ -18,7 +18,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function mount(): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::UPLOAD_HEATMAP, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::UPLOAD_HEATMAP, \App\Modules\Projects\Models\Project::current()]), 403);
     }
 
     public function updatedCsvFile(): void

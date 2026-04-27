@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\AiContextType;
-use App\ContextTag;
-use App\Models\AiContext;
+use App\Modules\Ai\Contexts\Enums\AiContextType;
+use App\Modules\Ai\Contexts\Enums\ContextTag;
+use App\Modules\Ai\Contexts\Models\AiContext;
 use Illuminate\Database\Seeder;
 
 class AiContextSeeder extends Seeder

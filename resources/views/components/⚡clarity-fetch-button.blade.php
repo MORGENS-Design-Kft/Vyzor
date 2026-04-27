@@ -2,10 +2,10 @@
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Artisan;
-use App\Models\ClarityFetchCounter;
-use App\Models\ClarityInsight;
-use App\Models\Project;
-use App\PermissionEnum;
+use App\Modules\Analytics\Clarity\Models\ClarityFetchCounter;
+use App\Modules\Analytics\Clarity\Models\ClarityInsight;
+use App\Modules\Projects\Models\Project;
+use App\Modules\Users\Enums\PermissionEnum;
 
 new class extends Component {
 
@@ -120,7 +120,7 @@ new class extends Component {
         width="md"
     >
         <x-slot:trigger>
-            <x-ui.button variant="primary" icon="arrow-clockwise" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::FETCH_CLARITY_DATA)">
+            <x-ui.button variant="primary" icon="arrow-clockwise" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::FETCH_CLARITY_DATA)">
                 {{ __('Fetch info') }}
             </x-ui.button>
         </x-slot:trigger>

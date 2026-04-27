@@ -4,11 +4,11 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
-use App\Models\Project;
-use App\Models\Report;
-use App\ReportStatusEnum;
+use App\Modules\Projects\Models\Project;
+use App\Modules\Reports\Models\Report;
+use App\Modules\Reports\Enums\ReportStatusEnum;
 use Illuminate\Support\Str;
-use App\PermissionEnum;
+use App\Modules\Users\Enums\PermissionEnum;
 
 new #[Layout('layouts.app')] class extends Component {
 
@@ -26,7 +26,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function mount(): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::CREATE_REPORT, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::CREATE_REPORT, \App\Modules\Projects\Models\Project::current()]), 403);
         // Default to "page" sub-tab when the project has no Clarity key
         // and the URL doesn't already specify a type.
         if (!$this->hasClarityKey && !request()->has('type')) {
@@ -96,7 +96,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 <div
     {{-- Auto-refresh while reports are processing --}}
-    @if ($recentReports->contains(fn ($r) => in_array($r->status, [\App\ReportStatusEnum::PENDING, \App\ReportStatusEnum::GENERATING])))
+    @if ($recentReports->contains(fn ($r) => in_array($r->status, [\App\Modules\Reports\Enums\ReportStatusEnum::PENDING, \App\Modules\Reports\Enums\ReportStatusEnum::GENERATING])))
         wire:poll.10s
     @endif
     class="p-6 space-y-6"

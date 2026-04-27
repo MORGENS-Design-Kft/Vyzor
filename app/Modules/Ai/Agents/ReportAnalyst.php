@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Modules\Ai\Agents;
+
+use App\Modules\Ai\Contexts\Enums\AiContextType;
+use App\Modules\Ai\Contexts\Models\AiContext;
+use Laravel\Ai\Attributes\Timeout;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Promptable;
+use Stringable;
+
+#[Timeout(300)]
+class ReportAnalyst implements Agent
+{
+    use Promptable;
+
+    public function instructions(): Stringable|string
+    {
+        $context = AiContext::active()
+            ->ofType(AiContextType::SYSTEM)
+            ->forModel()
+            ->where('slug', 'report-analyst-instructions')
+            ->first();
+
+        return $context?->context ?? '';
+    }
+}

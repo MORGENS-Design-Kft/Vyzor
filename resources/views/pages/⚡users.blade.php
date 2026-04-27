@@ -5,8 +5,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use App\Models\User;
 use App\Models\CustomerProfile;
-use App\PermissionEnum;
-use App\UserRoleEnum;
+use App\Modules\Users\Enums\PermissionEnum;
+use App\Modules\Users\Enums\UserRoleEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     public ?int $editingId = null;
@@ -110,7 +110,7 @@ new #[Layout('layouts.app')] class extends Component {
             <x-ui.heading level="h1" size="xl">{{ __('Users & Customers') }}</x-ui.heading>
             <x-ui.description class="mt-1">{{ __('Manage users and customer accounts.') }}</x-ui.description>
         </div>
-        <x-ui.button href="{{ route('register') }}" variant="primary" icon="plus-circle" color="neutral" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::CREATE_USER) && auth()->user()->cannot('permission', App\PermissionEnum::CREATE_CUSTOMER)">{{ __('Add new') }}</x-ui.button>
+        <x-ui.button href="{{ route('register') }}" variant="primary" icon="plus-circle" color="neutral" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::CREATE_USER) && auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::CREATE_CUSTOMER)">{{ __('Add new') }}</x-ui.button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -164,9 +164,9 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                         <div class="flex shrink-0 gap-1">
                             <x-ui.button size="xs" variant="ghost" icon="pencil"
-                                wire:click="startEditing({{ $user->id }})" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_USER)">{{ __('Edit') }}</x-ui.button>
+                                wire:click="startEditing({{ $user->id }})" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::EDIT_USER)">{{ __('Edit') }}</x-ui.button>
                             <x-ui.modal.trigger :id="'delete-user-' . $user->id">
-                                <x-ui.button size="xs" variant="ghost" icon="trash" color="red" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::REMOVE_USER)">{{ __('Delete') }}</x-ui.button>
+                                <x-ui.button size="xs" variant="ghost" icon="trash" color="red" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::REMOVE_USER)">{{ __('Delete') }}</x-ui.button>
                             </x-ui.modal.trigger>
                         </div>
                     @endif
@@ -249,9 +249,9 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                         <div class="flex shrink-0 gap-1">
                             <x-ui.button size="xs" variant="ghost" icon="pencil"
-                                wire:click="startEditing({{ $customer->id }})" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_CUSTOMER)">{{ __('Edit') }}</x-ui.button>
+                                wire:click="startEditing({{ $customer->id }})" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::EDIT_CUSTOMER)">{{ __('Edit') }}</x-ui.button>
                             <x-ui.modal.trigger :id="'delete-customer-' . $customer->id">
-                                <x-ui.button size="xs" variant="ghost" icon="trash" color="red" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::REMOVE_CUSTOMER)">{{ __('Delete') }}</x-ui.button>
+                                <x-ui.button size="xs" variant="ghost" icon="trash" color="red" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::REMOVE_CUSTOMER)">{{ __('Delete') }}</x-ui.button>
                             </x-ui.modal.trigger>
                         </div>
                     @endif

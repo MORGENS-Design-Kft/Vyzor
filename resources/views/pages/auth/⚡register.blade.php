@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use App\PermissionEnum;
+use App\Modules\Users\Enums\PermissionEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     public string $type = 'web';
@@ -34,8 +34,8 @@ new #[Layout('layouts.app')] class extends Component {
         <x-ui.fieldset :label="__('Register')" class="w-100">
             <x-ui.field>
                 <x-ui.radio.group wire:model.live="type" direction="horizontal">
-                    <x-ui.radio.item value="web" :label="__('User')" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::CREATE_USER)" />
-                    <x-ui.radio.item value="customer" :label="__('Customer')" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::CREATE_CUSTOMER)" />
+                    <x-ui.radio.item value="web" :label="__('User')" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::CREATE_USER)" />
+                    <x-ui.radio.item value="customer" :label="__('Customer')" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::CREATE_CUSTOMER)" />
                 </x-ui.radio.group>
             </x-ui.field>
 

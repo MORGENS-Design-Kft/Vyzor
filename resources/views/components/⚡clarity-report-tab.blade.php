@@ -1,13 +1,13 @@
 <?php
 
 use Livewire\Component;
-use App\AiContextType;
-use App\ContextTag;
-use App\Models\AiContext;
-use App\Models\Heatmap;
-use App\Models\Report;
-use App\ReportStatusEnum;
-use App\Jobs\GenerateAiReport;
+use App\Modules\Ai\Contexts\Enums\AiContextType;
+use App\Modules\Ai\Contexts\Enums\ContextTag;
+use App\Modules\Ai\Contexts\Models\AiContext;
+use App\Modules\Analytics\Heatmaps\Models\Heatmap;
+use App\Modules\Reports\Models\Report;
+use App\Modules\Reports\Enums\ReportStatusEnum;
+use App\Modules\Reports\Jobs\GenerateAiReport;
 use Illuminate\Support\Str;
 
 new class extends Component {

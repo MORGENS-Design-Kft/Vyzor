@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\UserRoleEnum;
+use App\Modules\Users\Enums\UserRoleEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;

@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Permission;
-use App\PermissionEnum;
-use App\UserRoleEnum;
+use App\Modules\Users\Enums\PermissionEnum;
+use App\Modules\Users\Enums\UserRoleEnum;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 

@@ -2,10 +2,10 @@
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-use App\Models\Report;
-use App\ReportStatusEnum;
+use App\Modules\Reports\Models\Report;
+use App\Modules\Reports\Enums\ReportStatusEnum;
 use Illuminate\Support\Str;
-use App\PermissionEnum;
+use App\Modules\Users\Enums\PermissionEnum;
 
 new #[Layout('layouts.app')] class extends Component {
 
@@ -16,7 +16,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function mount(Report $report): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::VIEW_REPORTS, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::VIEW_REPORTS, \App\Modules\Projects\Models\Project::current()]), 403);
         $this->report = $report;
         $this->editTitle = $report->title;
         $this->editContent = $report->content ?? '';
@@ -36,7 +36,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function save(): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::EDIT_REPORT, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::EDIT_REPORT, \App\Modules\Projects\Models\Project::current()]), 403);
         $this->validate([
             'editTitle' => 'required|string|max:255',
             'editContent' => 'required|string',
@@ -53,7 +53,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function deleteReport(): void
     {
-        abort_unless(auth()->user()->can('permission', [PermissionEnum::DELETE_REPORT, \App\Models\Project::current()]), 403);
+        abort_unless(auth()->user()->can('permission', [PermissionEnum::DELETE_REPORT, \App\Modules\Projects\Models\Project::current()]), 403);
         $this->report->delete();
         $this->redirect('/reports', navigate: true);
     }
@@ -132,11 +132,11 @@ new #[Layout('layouts.app')] class extends Component {
                     {{ __('Cancel') }}
                 </x-ui.button>
             @else
-                <x-ui.button variant="outline" color="neutral" icon="pencil-simple" wire:click="startEditing" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::EDIT_REPORT)">
+                <x-ui.button variant="outline" color="neutral" icon="pencil-simple" wire:click="startEditing" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::EDIT_REPORT)">
                     {{ __('Edit') }}
                 </x-ui.button>
                 <x-ui.modal.trigger id="delete-report-modal">
-                    <button class="p-2 text-neutral-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20" :disabled="auth()->user()->cannot('permission', App\PermissionEnum::DELETE_REPORT)">
+                    <button class="p-2 text-neutral-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20" :disabled="auth()->user()->cannot('permission', App\Modules\Users\Enums\PermissionEnum::DELETE_REPORT)">
                         <x-ui.icon name="trash" class="size-4" />
                     </button>
                 </x-ui.modal.trigger>

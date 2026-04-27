@@ -5,10 +5,10 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Attributes\On;
 use App\Models\User;
-use App\Models\Project;
-use App\PermissionEnum;
-use App\ProjectStatusEnum;
-use App\UserRoleEnum;
+use App\Modules\Projects\Models\Project;
+use App\Modules\Users\Enums\PermissionEnum;
+use App\Modules\Projects\Enums\ProjectStatusEnum;
+use App\Modules\Users\Enums\UserRoleEnum;
 
 new #[Layout('layouts.app')] class extends Component {
     public Project $project;
