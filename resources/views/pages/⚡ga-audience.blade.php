@@ -216,6 +216,8 @@ new #[Layout('layouts.app')] class extends Component {
                 'country'            => $country,
                 'demoLowConfidence'  => $demoLowConfidence,
             ];
+        } catch (\InvalidArgumentException $e) {
+            return [...$base, 'error' => __('Invalid date range — make sure "From" is on or before "To".')];
         } catch (GoogleAnalyticsException $e) {
             return [...$base, 'error' => $e->getMessage()];
         }
@@ -291,42 +293,14 @@ new #[Layout('layouts.app')] class extends Component {
             </x-ui.empty>
         </x-ui.card>
     @else
-        {{-- Date range picker + refresh --}}
-        <div class="flex items-center justify-between gap-4 flex-wrap">
-            <x-ui.radio.group wire:model.live="rangePreset" direction="horizontal" variant="segmented">
-                <x-ui.radio.item value="today" :label="__('Today')" />
-                <x-ui.radio.item value="last_7" :label="__('Last 7 days')" />
-                <x-ui.radio.item value="last_28" :label="__('Last 28 days')" />
-                <x-ui.radio.item value="last_30" :label="__('Last 30 days')" />
-                <x-ui.radio.item value="custom" :label="__('Custom')" />
-            </x-ui.radio.group>
-
-            <div class="flex items-center gap-3 flex-wrap">
-                @if ($rangePreset === 'custom')
-                    <div class="flex items-center gap-2">
-                        <x-ui.label>{{ __('From') }}</x-ui.label>
-                        <x-ui.input type="date" wire:model.live="dateFrom" class="w-44" />
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <x-ui.label>{{ __('To') }}</x-ui.label>
-                        <x-ui.input type="date" wire:model.live="dateTo" class="w-44" />
-                    </div>
-                @else
-                    <div class="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
-                        {{ $rangeFrom ?? $dateFrom }} → {{ $rangeTo ?? $dateTo }}
-                    </div>
-                @endif
-
-                <span wire:loading.delay.short class="inline-flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-                    <x-ui.icon name="circle-notch" class="size-3.5 animate-spin" />
-                    {{ __('Refreshing...') }}
-                </span>
-
-                <x-ui.button type="button" wire:click="forceRefresh" wire:loading.attr="disabled"
-                    variant="outline" color="neutral" size="sm" icon="arrow-clockwise">
-                    {{ __('Refresh') }}
-                </x-ui.button>
-            </div>
+        <div class="flex items-center justify-end">
+            <x-ga.range-picker
+                :rangePreset="$rangePreset"
+                :rangeFrom="$rangeFrom ?? null"
+                :rangeTo="$rangeTo ?? null"
+                :dateFrom="$dateFrom"
+                :dateTo="$dateTo"
+            />
         </div>
 
         @if ($error)

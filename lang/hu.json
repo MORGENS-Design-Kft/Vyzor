@@ -194,6 +194,7 @@
     "Inactive": "Inaktív",
     "Include Heatmap Data": "Hőtérkép adatok bevonása",
     "Instruction": "Utasítás",
+    "Invalid date range — make sure \"From\" is on or before \"To\".": "Érvénytelen dátumtartomány — a \"Tól\" dátum nem lehet későbbi, mint a \"Ig\" dátum.",
     "Label": "Címke",
     "Landing page": "Belépési oldal",
     "Landing pages": "Belépési oldalak",

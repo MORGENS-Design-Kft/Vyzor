@@ -68,6 +68,12 @@ new #[Layout('layouts.app')] class extends Component {
         $this->sortMetric = $metric;
     }
 
+    public function clearFilters(): void
+    {
+        $this->deviceFilter = '';
+        $this->channelFilter = '';
+    }
+
     public function forceRefresh(): void
     {
         $project = Project::current();
@@ -156,6 +162,8 @@ new #[Layout('layouts.app')] class extends Component {
                 'result'        => $svc->runCustomReport($project, $req),
                 'filterActive'  => $filter !== null,
             ];
+        } catch (\InvalidArgumentException $e) {
+            return [...$base, ...$this->viewHelpers(), 'error' => __('Invalid date range — make sure "From" is on or before "To".')];
         } catch (GoogleAnalyticsException $e) {
             return [...$base, ...$this->viewHelpers(), 'error' => $e->getMessage()];
         }
@@ -241,24 +249,13 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-ui.radio.item value="landing" :label="__('Landing pages')" />
             </x-ui.radio.group>
 
-            <div class="flex items-center gap-3 flex-wrap">
-                <x-ui.radio.group wire:model.live="rangePreset" direction="horizontal" variant="segmented">
-                    <x-ui.radio.item value="last_7" :label="__('7d')" />
-                    <x-ui.radio.item value="last_28" :label="__('28d')" />
-                    <x-ui.radio.item value="last_30" :label="__('30d')" />
-                </x-ui.radio.group>
-                <span class="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
-                    {{ $rangeFrom ?? $dateFrom }} → {{ $rangeTo ?? $dateTo }}
-                </span>
-                <span wire:loading.delay.short class="inline-flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-                    <x-ui.icon name="circle-notch" class="size-3.5 animate-spin" />
-                    {{ __('Refreshing...') }}
-                </span>
-                <x-ui.button type="button" wire:click="forceRefresh" wire:loading.attr="disabled"
-                    variant="outline" color="neutral" size="sm" icon="arrow-clockwise">
-                    {{ __('Refresh') }}
-                </x-ui.button>
-            </div>
+            <x-ga.range-picker
+                :rangePreset="$rangePreset"
+                :rangeFrom="$rangeFrom ?? null"
+                :rangeTo="$rangeTo ?? null"
+                :dateFrom="$dateFrom"
+                :dateTo="$dateTo"
+            />
         </div>
 
         {{-- Filters row --}}
@@ -290,7 +287,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </x-ui.select>
             </div>
             @if ($filterActive ?? false)
-                <x-ui.button wire:click="$set('deviceFilter', ''); $set('channelFilter', '')" variant="outline" size="sm" icon="x">
+                <x-ui.button wire:click="clearFilters" variant="outline" size="sm" icon="x">
                     {{ __('Clear filters') }}
                 </x-ui.button>
             @endif
@@ -371,7 +368,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         {{ __('Engagement') }} {{ $sortMetric === 'engagementRate' ? '↓' : '' }}
                                     </button>
                                 </th>
-                                <th class="text-right py-2 font-medium" :title="__('Total time users actively engaged with this page (sum across users).')">
+                                <th class="text-right py-2 font-medium" title="{{ __('Total time users actively engaged with this page (sum across users).') }}">
                                     <button type="button" wire:click="setSort('userEngagementDuration')"
                                         class="hover:text-neutral-900 dark:hover:text-neutral-100 {{ $sortMetric === 'userEngagementDuration' ? 'text-neutral-900 dark:text-neutral-100' : '' }}">
                                         {{ __('Time on page') }} {{ $sortMetric === 'userEngagementDuration' ? '↓' : '' }}
