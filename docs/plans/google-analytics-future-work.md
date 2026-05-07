@@ -145,6 +145,27 @@ GA4 property-nként lehetnek custom esemény-paraméterek (`customEvent:button_i
 
 ## Operációs / kiegészítések
 
+### `laravel/ai` upstream patch — tool-call loop timeout
+
+**Helyzet**: van egy aktív monkey-patch a [`TimeoutAwareOpenAiGateway`](../../app/Modules/Ai/Gateway/TimeoutAwareOpenAiGateway.php)-ban, ami a laravel/ai library egy bug-ját kerüli meg. Az [`AiServiceProvider`](../../app/Modules/Ai/AiServiceProvider.php) `boot()` metódusa cseréli le az alapértelmezett OpenAI gateway-t erre.
+
+**Az upstream bug** (laravel/ai v0.4.x):
+- `vendor/laravel/ai/src/Gateway/OpenAi/Concerns/ParsesTextResponses.php:233` — `continueWithToolResults()` a `$this->client($provider)`-t hívja **timeout argumentum nélkül**
+- A trait `CreatesOpenAiClient::client()` 60s-ra esik vissza ha nincs explicit timeout
+- Az agent `#[Timeout(300)]` attribute csak az **első** turn-ön érvényesül; minden tool-call utáni follow-up request 60s-os deadline-nal megy
+- Ugyanez a hiba megvan a `HandlesTextStreaming` streaming pályán is
+
+**Mit kell tenni amikor frissül a library**:
+1. PR / issue tracking: nézd meg a [laravel/ai repo](https://github.com/laravel/ai) issues-t — ha nincs hasonló, érdemes felvetni
+2. Ha az upstream javítja (a `continueWithToolResults`-ban átadja a timeout-ot), akkor:
+   - Az `AiServiceProvider::boot()`-ból ki lehet venni az `extend('openai', ...)` blokkot
+   - A `TimeoutAwareOpenAiGateway` osztályt törölni
+   - A javítást a release notes-ban megemlíteni
+
+**Mit NEM kell tenni amíg nincs upstream fix**: ne távolítsd el a workaround-ot. A GA riportok tool-callja kritikus funkcionalitás (drill-down a riportgenerálás közben), és nélküle 60s-on belül time-outolnak.
+
+---
+
 ### Redis cache
 
 Most database driver — minden cache hit egy SQL lekérés. Redis-szel ~10× gyorsabb lenne (kb. 1 ms helyett 10 ms-os DB query helyett tizedmillisec memóriaművelet).

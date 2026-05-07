@@ -75,26 +75,55 @@ DESC;
 
     public function schema(JsonSchema $schema): array
     {
+        // OpenAI's strict-mode tool schema (Laravel/AI forces strict: true
+        // for OpenAI in MapsTools::mapTool) requires:
+        //   - every property listed in `required`
+        //   - optional fields modelled as nullable types (string|null etc.)
+        //   - `additionalProperties: false` on every object
+        //   - `items` on every array
+        // The runtime extraction code (extractFilter, dispatch) treats null
+        // and missing values identically, so the AI can pass null for any
+        // field that doesn't apply to its query.
+
+        // Filter entry — shape varies with `op` (value vs values vs from/to),
+        // so non-applicable fields can be null. Runtime Filter::fromArray()
+        // ignores null/missing keys.
+        $filterEntry = $schema->object([
+            'field' => $schema->string()->required()
+                ->description('Dimension or metric API name (e.g. "deviceCategory", "sessions").'),
+            'op' => $schema->string()->required()
+                ->description('One of: equals, contains, begins_with, ends_with, regexp, in, gt, gte, lt, lte, between, empty.'),
+            'value' => $schema->string()->required()->nullable()
+                ->description('Single value for equals/contains/begins_with/ends_with/regexp/gt/gte/lt/lte. Numeric ops accept stringified numbers. Null for "in"/"between"/"empty".'),
+            'values' => $schema->array()->items($schema->string())->required()->nullable()
+                ->description('Multiple values for the "in" operator. Null otherwise.'),
+            'from' => $schema->string()->required()->nullable()
+                ->description('Lower bound (numeric, stringified) for the "between" operator. Null otherwise.'),
+            'to' => $schema->string()->required()->nullable()
+                ->description('Upper bound (numeric, stringified) for the "between" operator. Null otherwise.'),
+            'caseSensitive' => $schema->boolean()->required()->nullable()
+                ->description('For string operators only. Default: false. Null otherwise.'),
+        ])->withoutAdditionalProperties();
+
         return [
-            'query' => $schema->string()
-                ->description('Type of GA query — see description for allowed values.')
-                ->required(),
-            'from' => $schema->string()
-                ->description('Start date YYYY-MM-DD or relative shortcut. Default: 7daysAgo.'),
-            'to' => $schema->string()
-                ->description('End date YYYY-MM-DD or relative shortcut. Default: today.'),
-            'previous_from' => $schema->string()
-                ->description('Only for compare_period: previous range start.'),
-            'previous_to' => $schema->string()
-                ->description('Only for compare_period: previous range end.'),
-            'limit' => $schema->integer()
-                ->description('Max rows to return for tabular queries. Default: 50.'),
-            'metrics' => $schema->array()
-                ->description('Only for daily_timeline and compare_period: GA metric names, e.g. ["sessions","engagedSessions"].'),
-            'filter' => $schema->array()
-                ->description('Optional dimension filter — list of {field, op, value} entries ANDed together. See description for shape.'),
-            'metric_filter' => $schema->array()
-                ->description('Optional metric filter — same shape as filter, but field names are metric names and ops are gt/gte/lt/lte/between.'),
+            'query' => $schema->string()->required()
+                ->description('Type of GA query — see description for allowed values.'),
+            'from' => $schema->string()->required()->nullable()
+                ->description('Start date YYYY-MM-DD or relative shortcut. Null defaults to "7daysAgo".'),
+            'to' => $schema->string()->required()->nullable()
+                ->description('End date YYYY-MM-DD or relative shortcut. Null defaults to "today".'),
+            'previous_from' => $schema->string()->required()->nullable()
+                ->description('Only for compare_period: previous range start. Null = auto-derive from current.'),
+            'previous_to' => $schema->string()->required()->nullable()
+                ->description('Only for compare_period: previous range end. Null = auto-derive from current.'),
+            'limit' => $schema->integer()->required()->nullable()
+                ->description('Max rows for tabular queries. Null defaults to 50.'),
+            'metrics' => $schema->array()->items($schema->string())->required()->nullable()
+                ->description('Only for daily_timeline and compare_period: GA metric names, e.g. ["sessions","engagedSessions"]. Null otherwise.'),
+            'filter' => $schema->array()->items($filterEntry)->required()->nullable()
+                ->description('Optional dimension filter — list of leaf entries ANDed together. Null = no filter.'),
+            'metric_filter' => $schema->array()->items($filterEntry)->required()->nullable()
+                ->description('Optional metric filter — same shape as filter, but ops are gt/gte/lt/lte/between. Null = no filter.'),
         ];
     }
 
