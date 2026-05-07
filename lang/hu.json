@@ -32,6 +32,7 @@
     "AI Models": "AI Modellek",
     "AI report requested. It will appear in the reports list once generated.": "AI riport igényelve. A riportok listájában jelenik meg, amint elkészül.",
     "AI Reports": "AI Riportok",
+    "AI returned an empty response. The model may have refused the request, hit a content filter, or stopped without producing a final answer.": "Az AI üres választ adott. A modell valószínűleg elutasította a kérést, tartalom-szűrőbe ütközött, vagy végső válasz nélkül leállt.",
     "All": "Összes",
     "All Heatmaps": "Összes hőtérkép",
     "All Models": "Összes modell",

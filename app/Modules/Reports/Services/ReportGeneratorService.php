@@ -29,9 +29,22 @@ class ReportGeneratorService
             $prompt         = $this->buildPrompt($report, $flavor, $preset, $provider);
 
             $response = $agent->prompt($prompt, provider: $provider);
+            $content  = (string) $response;
+
+            // Treat an empty (or whitespace-only) response as a failure rather
+            // than persisting a blank "completed" report. A blank body usually
+            // means the model refused the request, hit a content filter, or
+            // bailed out of the tool loop without composing a final answer —
+            // surfacing it as FAILED makes that visible to the user instead
+            // of leaving them with a silent empty page.
+            if (trim($content) === '') {
+                throw new \RuntimeException(
+                    __('AI returned an empty response. The model may have refused the request, hit a content filter, or stopped without producing a final answer.'),
+                );
+            }
 
             $report->update([
-                'content' => (string) $response,
+                'content' => $content,
                 'ai_model_name' => $provider,
                 'status' => ReportStatusEnum::COMPLETED,
             ]);
