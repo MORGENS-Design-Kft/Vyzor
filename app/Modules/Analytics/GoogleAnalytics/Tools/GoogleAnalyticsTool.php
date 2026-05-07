@@ -2,9 +2,9 @@
 
 namespace App\Modules\Analytics\GoogleAnalytics\Tools;
 
+use App\Modules\Ai\Tools\ProjectScopedTool;
 use App\Modules\Analytics\GoogleAnalytics\Enums\GaDimension;
 use App\Modules\Analytics\GoogleAnalytics\Enums\GaMetric;
-use App\Modules\Analytics\GoogleAnalytics\Exceptions\GoogleAnalyticsException;
 use App\Modules\Analytics\GoogleAnalytics\Queries\DateRange;
 use App\Modules\Analytics\GoogleAnalytics\Queries\Filter;
 use App\Modules\Analytics\GoogleAnalytics\Queries\ReportRequest;
@@ -12,7 +12,6 @@ use App\Modules\Analytics\GoogleAnalytics\Services\GoogleAnalyticsQueryService;
 use App\Modules\Projects\Models\Project;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
 
@@ -23,15 +22,20 @@ use Stringable;
  * one tool per query type — the AI gets a clear menu in the description and
  * a single, simple schema. Cheaper for prompt cache and easier to maintain.
  *
- * The tool is locked to a specific project at construction; the AI cannot
- * read another project's GA data through it.
+ * Inherits the standard Vyzor tool shape from {@see ProjectScopedTool}:
+ *   - Locked to a single project (constructor-enforced; AI can't reach
+ *     another project's data through this tool).
+ *   - Uniform JSON-encoded response (success vs error) so the LLM gets a
+ *     predictable shape regardless of what failed.
  */
-class GoogleAnalyticsTool implements Tool
+class GoogleAnalyticsTool extends ProjectScopedTool
 {
     public function __construct(
-        public readonly Project $project,
+        Project $project,
         public readonly GoogleAnalyticsQueryService $query,
-    ) {}
+    ) {
+        parent::__construct($project);
+    }
 
     public function description(): Stringable|string
     {
@@ -127,19 +131,14 @@ DESC;
         ];
     }
 
-    public function handle(Request $request): Stringable|string
+    /**
+     * Tool body — base class handles try/catch and JSON encoding.
+     * Throws are auto-wrapped into the standard {"error": "..."} payload.
+     */
+    protected function execute(Request $request): array
     {
         $type = (string) $request['query'];
-
-        try {
-            $result = $this->dispatch($type, $request);
-        } catch (GoogleAnalyticsException $e) {
-            return json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        } catch (\Throwable $e) {
-            return json_encode(['error' => 'Tool error: ' . $e->getMessage()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        }
-
-        return json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return $this->dispatch($type, $request);
     }
 
     private function dispatch(string $type, Request $req): array
