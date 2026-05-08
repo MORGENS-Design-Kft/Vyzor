@@ -30,8 +30,7 @@ Készülő, halasztott vagy javasolt funkciók. Akkor olvasd, ha valami **épül
 |------|----------|
 | [`plans/ai-agent-configurator.md`](plans/ai-agent-configurator.md) | Admin AI-agent konfigurátor UI — scope, current state, megoldási javaslat |
 | [`plans/hotjar-analysis.md`](plans/hotjar-analysis.md) | Hotjar AI-elemzés — kutatás, hibrid megközelítés, státusz |
-| [`plans/google-analytics-integration.md`](plans/google-analytics-integration.md) | GA4 integráció architektúrája és implementációs terve |
-| [`plans/google-analytics-future-work.md`](plans/google-analytics-future-work.md) | GA — halasztott / nem implementált pontok |
+| [`plans/google-analytics-future-work.md`](plans/google-analytics-future-work.md) | GA modul — halasztott / nem implementált pontok és todo lista |
 
 ## [images/](images/) — Termékbemutató képek
 

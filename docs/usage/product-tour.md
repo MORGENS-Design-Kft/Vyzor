@@ -21,6 +21,11 @@ A bal oldali navigáció az alábbi struktúrát követi:
 | **Általános** | Projektek | Projektek listázása, létrehozása, kezelése |
 | **Projekt > Clarity** | Pillanatkép | Aktuális Clarity metrikák |
 | | Trendek | Időszakos változások elemzése |
+| **Projekt > Google Analytics** | Áttekintés | Forgalmi áttekintés és időszak-összehasonlítás |
+| | Oldalak | Top oldalak, landing page-ek és események |
+| | Közönség | Csatorna-, eszköz- és földrajzi bontás |
+| | GA riport | AI riport kérelem GA adatokra |
+| | Élő | Realtime aktív felhasználók (utolsó 30 perc) |
 | **Projekt > Jelentések** | Új jelentés | Report kérelem indítása |
 | | Összes jelentés | Korábbi reportok listája |
 | **Projekt > Hőtérképek** | Feltöltés | CSV hőtérkép feltöltése |
@@ -41,6 +46,7 @@ Egy projektnek a következő tulajdonságai vannak:
 - **Név** és **leírás**
 - **Domain** — a weblap címe, amelyhez a projekt tartozik
 - **Clarity API kulcs** — a Microsoft Clarity integráció azonosítója (titkosítva tárolt)
+- **Google Analytics property** — a GA4 property azonosítója (`properties/123456789`); a projekt szerkesztőjéből választható listából, vagy kézzel megadva (titkosítva tárolt)
 - **Státusz** — a projekt aktuális állapota:
 
 | Státusz | Szín | Jelentés |
@@ -87,6 +93,46 @@ Lehet látni az utóbbi lekért adatok idejét és periódusát. A felhasználó
 
 ---
 
+## Google Analytics
+
+A Vyzor a Google Analytics 4 (GA Data API) rendszerét is integrálja. A Clarity-vel ellentétben a GA modul **on-demand** lekérdezésekkel dolgozik — nincs napi snapshot DB-be, helyette okos cache-eléssel friss marad (a mai napra 15 perces, a régebbi időszakokra hosszabb TTL-lel).
+
+A modul ugyanazt a query réteget szolgálja ki a UI dashboardoknak és az AI riport-generátornak.
+
+### Konfiguráció
+
+A GA integráció **service account** alapú: a Vyzor szerver oldalon egyetlen service account-ot használ, amelyet a felhasználónak `Viewer` jogkörrel hozzá kell adnia a saját GA property-jéhez. Ezután a property azonosítóját (`properties/123456789`) a projekt szerkesztőjében lehet megadni.
+
+A property megadása után a rendszer automatikusan ellenőrzi a kapcsolatot, és lekérdezhetővé válnak a GA oldalak.
+
+### Időszak választás
+
+Minden GA oldal támogatja a következő időszak preset-eket: **mai nap**, **utolsó 7 nap**, **utolsó 28 nap**, **utolsó 30 nap**, valamint **egyedi időszak**. A „Frissítés" gombbal a felhasználó manuálisan invalidálhatja a property cache-ét, ha azonnal friss adatra van szüksége.
+
+### Áttekintés
+
+Forgalmi áttekintő dashboard a következő metrikákkal: munkamenetek, egyedi felhasználók, új felhasználók, elkötelezett munkamenetek, oldalmegtekintések, elköteleződési ráta, visszafordulási arány, átlagos munkamenet hossz.
+
+A kártyák mellett **időszak-összehasonlítás** is megjelenik (delta% az előző azonos hosszúságú időszakhoz képest), valamint csatorna-, eszköz- és napi trend bontás.
+
+### Oldalak
+
+Top oldalak, landing page-ek és események részletes táblázata. Szűrhető és szortolható, megjeleníti az oldalak forgalmi és elköteleződési mutatóit.
+
+### Közönség
+
+Csatorna- (default channel group), eszköz- (deviceCategory) és földrajzi (ország) bontások. Donut chart és lista nézetben.
+
+### GA riport
+
+A felhasználó AI riportot kérhet kifejezetten Google Analytics adatokra. A folyamat hasonló a [Reportok](#reportok) modulhoz, de itt csak a **GA címkével** rendelkező sablonok közül lehet választani. Az AI agent a GA query service-t hívja közvetlenül (function calling), így dinamikusan tud mélyíteni az adatokban, nem előre kapott statikus snapshotból dolgozik.
+
+### Élő (Realtime)
+
+Az utolsó 30 perc élő adatait jeleníti meg: aktív felhasználók száma, országonkénti / eszközönkénti bontás, legaktívabb oldalak és események. A cache TTL-je itt 30 másodperc, így a panel közel valós idejű.
+
+---
+
 ## Reportok
 
 A felhasználó képes a többi modul információival AI alapú elemzéseket kérni.
@@ -119,6 +165,8 @@ Ebben a módban a rendszer a Clarity által lekért adatokat kéri be az adatbá
 
 Ezen a fülön lehet specifikus weblapok felépítését elemeztetni.
 Lehetséges a projekt weblapjai között válogatni, vagy saját URL-t beilleszteni. A rendszer letölti a weblap tartalmát, megtisztítja, majd átadja az AI-nak elemzésre.
+
+> Az **oldal-elemző** (Page Analyser) jelenleg még **korai állapotban** van — limitáltan használható. A tartalom tisztítás és az elemzés minősége még finomításra szorul, várhatóan iterálni fogunk rajta.
 
 ![report-oldal](../images/image-6.png)
 
@@ -244,10 +292,6 @@ A Web szerepkörű felhasználók részletes, jogosultság alapú hozzáférés-
 ---
 
 ## Tervek
-
-### Google Analytics implementáció
-
-Szeretnénk a Google Analytics rendszerét is bevonni a Vyzorba.
 
 ### Élő kontextus menedzser
 

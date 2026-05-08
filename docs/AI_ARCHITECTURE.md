@@ -386,7 +386,7 @@ Még ott van a `Contexts/Models/`-ben de új kód NE használja. Az `AiContext` 
 ## További olvasnivaló
 
 - **Modul-szintű architektúra**: [`docs/PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md)
-- **GA integráció részletek**: [`docs/plans/google-analytics-integration.md`](plans/google-analytics-integration.md)
+- **GA modul kód**: [`app/Modules/Analytics/GoogleAnalytics/`](../app/Modules/Analytics/GoogleAnalytics/)
 - **GA jövőbeli munka + patch-listák**: [`docs/plans/google-analytics-future-work.md`](plans/google-analytics-future-work.md)
 - **Laravel/AI library docs**: a `vendor/laravel/ai/` README és source — különösen `Promptable.php` és `Gateway/OpenAi/OpenAiGateway.php`
 - **OpenAI strict-mode tool schema szabályok**: [platform.openai.com/docs/guides/structured-outputs](https://platform.openai.com/docs/guides/structured-outputs) (ugyanazok érvényesek tools-ra is)

@@ -61,7 +61,7 @@ Failure case-ben az error a `Report.content` mezőbe íródik `Error: <message>`
 | **Generator service** | [`app/Modules/Reports/Services/ReportGeneratorService.php`](../../app/Modules/Reports/Services/ReportGeneratorService.php) | A flavor router — `loadPreset()`, `resolveFlavor()`, `resolveAgent()`, `buildPrompt()`. A `buildGaPrompt()` és `renderGaContext()` itt él. |
 | **AI agent** | [`app/Modules/Ai/Agents/ReportAnalyst.php`](../../app/Modules/Ai/Agents/ReportAnalyst.php) | `Agent + HasTools`. `instructionsSlug` paraméterrel testreszabható — GA-nál `'ga-analyst-instructions'`. `tools()` array-t ad vissza (lásd [Library quirk](#library-quirk-tools-array-vs-iterable)). |
 | **Function-calling tool** | [`app/Modules/Analytics/GoogleAnalytics/Tools/GoogleAnalyticsTool.php`](../../app/Modules/Analytics/GoogleAnalytics/Tools/GoogleAnalyticsTool.php) | A LLM ezzel kérhet drill-down adatot futás közben (más dátum, top-N, channel-bontás stb.). 11 query típus + filter támogatás. |
-| **GA query layer** | [`app/Modules/Analytics/GoogleAnalytics/Services/GoogleAnalyticsQueryService.php`](../../app/Modules/Analytics/GoogleAnalytics/Services/GoogleAnalyticsQueryService.php) | Domain API a GA4 Data SDK fölé. Cache-elt, tipusos DTO-kkal. Részleteket lásd: [`docs/plans/google-analytics-integration.md`](../plans/google-analytics-integration.md). |
+| **GA query layer** | [`app/Modules/Analytics/GoogleAnalytics/Services/GoogleAnalyticsQueryService.php`](../../app/Modules/Analytics/GoogleAnalytics/Services/GoogleAnalyticsQueryService.php) | Domain API a GA4 Data SDK fölé. Cache-elt, tipusos DTO-kkal. |
 | **AI context modell** | [`app/Modules/Ai/Contexts/Models/AiContext.php`](../../app/Modules/Ai/Contexts/Models/AiContext.php) | Az `ai_contexts` táblát fed le. Típusok: `SYSTEM`, `INSTRUCTION`, `PRESET`. Címkék: `clarity`, `page_analyser`, `ga`. |
 | **Tag enum** | [`app/Modules/Ai/Contexts/Enums/ContextTag.php`](../../app/Modules/Ai/Contexts/Enums/ContextTag.php) | `CLARITY`, `PAGE_ANALYSER`, `GA`. |
 | **System instructions** | [`resources/ai-prompts/ga-analyst-instructions.md`](../../resources/ai-prompts/ga-analyst-instructions.md) | A GA agent „personality"-je — GA4 terminológia, prioritizálás, output-stílus. |
@@ -164,7 +164,7 @@ A GA blokkot a `renderGaContext()` rakja össze. **5 GA query** fut le egy prób
 
 Mind az 5 lekérdezés egy `try` blokkon belül megy, és ha bármelyik `GoogleAnalyticsException`-t dob, az egész GA blokk helyett egy fallback üzenet kerül a promptba: „GA data could not be loaded: …". Ez azt jelenti — a riport nem hal meg attól, hogy GA nem elérhető; az AI értelmezi a hibát és érdemi választ ad.
 
-A GA query layer cache-elve van (`GoogleAnalyticsCache`, réteges TTL — lásd [`docs/plans/google-analytics-integration.md`](../plans/google-analytics-integration.md)), így ugyanaz a query 5 percen belül nem hív API-t kétszer.
+A GA query layer cache-elve van (`GoogleAnalyticsCache`, réteges TTL — lásd [`app/Modules/Analytics/GoogleAnalytics/Services/GoogleAnalyticsCache.php`](../../app/Modules/Analytics/GoogleAnalytics/Services/GoogleAnalyticsCache.php) és [`Enums/GaCacheTier.php`](../../app/Modules/Analytics/GoogleAnalytics/Enums/GaCacheTier.php)), így ugyanaz a query 5 percen belül nem hív API-t kétszer.
 
 ### 6. Az agent
 
@@ -348,6 +348,6 @@ Ezek vagy szándékosan halasztva vannak, vagy egyszerűen még nem voltak fonto
 ## Kapcsolódó doksik
 
 - [`docs/dev/reports-ui.md`](reports-ui.md) — a riport UI komponensek (preset-grid, preset-preview, recent-reports, report-card).
-- [`docs/plans/google-analytics-integration.md`](../plans/google-analytics-integration.md) — a GA query service architektúrája és cache-stratégiája.
+- [`app/Modules/Analytics/GoogleAnalytics/`](../../app/Modules/Analytics/GoogleAnalytics/) — a GA query service kódja (cache, DTO-k, tool, parancsok).
 - [`docs/plans/google-analytics-future-work.md`](../plans/google-analytics-future-work.md) — a GA modul halasztott pontjai.
 - [`docs/plans/ai-agent-configurator.md`](../plans/ai-agent-configurator.md) — terv az admin AI-konfigurátor UI-hoz, ami a most hardcode-olt slug-okat („`ga-analyst-instructions`", „`output-format`") kivezetné.

@@ -2,7 +2,7 @@
 
 A jelen állapot (iter 3 + cache/UX optimalizáció) működő, élesben használt rendszer. Ez a doksi a megnyitott pontokat és a lehetséges következő lépéseket gyűjti össze, hogy ha bármikor visszatérünk hozzájuk, ne kelljen újból átgondolni.
 
-> **Ne felejtsd**: a teljes architektúra leírása a [google-analytics-integration.md](google-analytics-integration.md)-ben van. Ez a fájl csak a teendőkre fókuszál.
+> **Ne felejtsd**: az élő architektúra a kódban él — belépési pont [`app/Modules/Analytics/GoogleAnalytics/`](../../app/Modules/Analytics/GoogleAnalytics). Ez a fájl csak a teendőkre fókuszál.
 
 ---
 
@@ -285,6 +285,6 @@ Ha visszatérsz egy feladathoz, ezeket a fájlokat érdemes először megnézni:
 - **Livewire oldalak**: [`resources/views/pages/⚡ga-*.blade.php`](../../resources/views/pages/)
 - **Layout / sidebar**: [`resources/views/layouts/app.blade.php`](../../resources/views/layouts/app.blade.php)
 - **Routes**: [`routes/web.php`](../../routes/web.php)
-- **Tervek**: ez a fájl + [`google-analytics-integration.md`](google-analytics-integration.md)
+- **Tervek**: ez a fájl
 - **Architektúra leírás**: [`docs/dev/project-structure.md`](../dev/project-structure.md)
 - **Tesztek**: [`tests/Unit/GoogleAnalytics/`](../../tests/Unit/GoogleAnalytics) és [`tests/Feature/GoogleAnalytics/`](../../tests/Feature/GoogleAnalytics)
