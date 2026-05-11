@@ -155,7 +155,6 @@
                             <x-ui.navlist.item :label="__('All Reports')" icon="book-bookmark" href="/reports"
                                 :active="request()->is('reports') || request()->is('reports/*')" :disabled="$noProject || auth()->user()->cannot('permission', [App\Modules\Users\Enums\PermissionEnum::VIEW_REPORTS, $currentProject])" />
                         </x-ui.navlist.group>
-                        <x-ui.navlist.item disabled :label="__('Presentations')" icon="projector-screen-chart" />
                     </x-ui.navlist.group>
                     <x-ui.navlist.group :label="__('System')">
                         <x-ui.navlist.item :label="__('Users | Customers')" icon="users" href="/users"
